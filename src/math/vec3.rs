@@ -4,17 +4,17 @@ use std::{
 };
 
 #[derive(Debug, Default)]
-pub struct vec3 {
+pub struct Vec3 {
     values: [f32; 3],
 }
 
-impl vec3 {
+impl Vec3 {
     pub fn new(x: f32, y: f32, z: f32) -> Self {
         Self { values: [x, y, z] }
     }
 
     pub const fn zero() -> Self {
-        vec3 {
+        Vec3 {
             values: [0., 0., 0.],
         }
     }
@@ -68,14 +68,14 @@ impl vec3 {
     }
 }
 
-impl Display for vec3 {
+impl Display for Vec3 {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
         writeln!(f, "x:{} y:{} z:{}", self.x(), self.y(), self.z())
     }
 }
 
 /// Access vector's values directly
-impl Deref for vec3 {
+impl Deref for Vec3 {
     type Target = [f32; 3];
     fn deref(&self) -> &Self::Target {
         &self.values
@@ -83,14 +83,14 @@ impl Deref for vec3 {
 }
 
 /// Access and mutate vector's values directly
-impl DerefMut for vec3 {
+impl DerefMut for Vec3 {
     fn deref_mut(&mut self) -> &mut Self::Target {
         &mut self.values
     }
 }
 
 /// Assign operations overrides
-impl AddAssign for vec3 {
+impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
         self[0] += rhs.x();
         self[1] += rhs.y();
@@ -98,20 +98,20 @@ impl AddAssign for vec3 {
     }
 }
 
-impl MulAssign<f32> for vec3 {
+impl MulAssign<f32> for Vec3 {
     fn mul_assign(&mut self, rhs: f32) {
         self.values.iter_mut().for_each(|v| *v *= rhs)
     }
 }
 
-impl DivAssign<f32> for vec3 {
+impl DivAssign<f32> for Vec3 {
     fn div_assign(&mut self, rhs: f32) {
         self.mul_assign(1. / rhs);
     }
 }
 //////////////////
 
-impl Neg for vec3 {
+impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self::Output {
         Self {
@@ -120,16 +120,16 @@ impl Neg for vec3 {
     }
 }
 
-impl Add for vec3 {
+impl Add for Vec3 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
-        vec3 {
+        Vec3 {
             values: [self.x() + rhs.x(), self.y() + rhs.y(), self.z() + rhs.z()],
         }
     }
 }
 
-impl Sub for vec3 {
+impl Sub for Vec3 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
         Self {
@@ -138,7 +138,7 @@ impl Sub for vec3 {
     }
 }
 
-impl Mul for vec3 {
+impl Mul for Vec3 {
     type Output = Self;
     fn mul(self, rhs: Self) -> Self::Output {
         Self {
@@ -147,17 +147,17 @@ impl Mul for vec3 {
     }
 }
 
-impl Mul<f32> for &vec3 {
-    type Output = vec3;
+impl Mul<f32> for &Vec3 {
+    type Output = Vec3;
     fn mul(self, rhs: f32) -> Self::Output {
-        vec3 {
+        Vec3 {
             values: self.values.map(|v| v * rhs),
         }
     }
 }
 
-impl Div<f32> for &vec3 {
-    type Output = vec3;
+impl Div<f32> for &Vec3 {
+    type Output = Vec3;
     fn div(self, rhs: f32) -> Self::Output {
         self.mul(1. / rhs)
     }
@@ -165,38 +165,38 @@ impl Div<f32> for &vec3 {
 
 #[cfg(test)]
 mod test {
-    use super::vec3;
+    use super::Vec3;
 
     #[test]
     fn length_test() {
-        let vec = vec3::new(0., 0., 0.);
+        let vec = Vec3::new(0., 0., 0.);
         assert_eq!(vec.length(), 0.);
 
-        let vec = vec3::new(1., 2., 3.);
+        let vec = Vec3::new(1., 2., 3.);
         assert!(f32::abs(vec.length() - 3.741_657_5) < f32::EPSILON);
     }
 
     #[test]
     fn dot_test() {
-        let v1 = vec3::new(0., 0., 0.);
+        let v1 = Vec3::new(0., 0., 0.);
         assert_eq!(v1.dot(&v1), 0.);
 
-        let v1 = vec3::new(1., 2., 3.);
-        let v2 = vec3::new(10., 20., 30.);
+        let v1 = Vec3::new(1., 2., 3.);
+        let v2 = Vec3::new(10., 20., 30.);
         assert_eq!(v1.dot(&v2), 140.);
         assert_eq!(v2.dot(&v1), 140.);
     }
 
     #[test]
     fn cross_test() {
-        let v1 = vec3::new(0., 0., 0.);
+        let v1 = Vec3::new(0., 0., 0.);
         let res = v1.cross(&v1);
         assert_eq!(res.x(), 0.);
         assert_eq!(res.y(), 0.);
         assert_eq!(res.z(), 0.);
 
-        let v1 = vec3::new(1., 1., 1.);
-        let v2 = vec3::new(10., 20., 30.);
+        let v1 = Vec3::new(1., 1., 1.);
+        let v2 = Vec3::new(10., 20., 30.);
         let res = v1.cross(&v2);
         assert_eq!(res.x(), 10.);
         assert_eq!(res.y(), -20.);

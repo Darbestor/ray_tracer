@@ -21,10 +21,7 @@ fn main() {
             let g = j as f32 / (height - 1) as f32;
             let b = 0.25;
 
-            let ir = (255.999 * r) as u8;
-            let ig = (255.999 * g) as u8;
-            let ib = (255.999 * b) as u8;
-            ppm.pixels[j * height + i] = Color::new(ir, ig, ib);
+            ppm.pixels[j * height + i] = Color::from_unit_range(r, g, b).unwrap();
         }
     }
     let mut path = std::env::current_dir().unwrap();
