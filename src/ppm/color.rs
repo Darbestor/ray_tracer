@@ -1,3 +1,4 @@
+/// RGB color
 #[derive(Clone)]
 pub struct Color {
     red: u8,
@@ -10,14 +11,17 @@ impl Color {
         Self { red, green, blue }
     }
 
+    /// Returns red channel
     pub fn get_red(&self) -> u8 {
         self.red
     }
 
+    /// Returns green channel
     pub fn get_green(&self) -> u8 {
         self.green
     }
 
+    /// Returns blue channel
     pub fn get_blue(&self) -> u8 {
         self.blue
     }
