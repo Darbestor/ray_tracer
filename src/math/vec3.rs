@@ -3,6 +3,7 @@ use std::{
     ops::{Add, AddAssign, Deref, DerefMut, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
+/// 3-Dimensional vector
 #[derive(Debug, Default)]
 pub struct Vec3 {
     values: [f32; 3],
@@ -123,6 +124,13 @@ impl Neg for Vec3 {
 impl Add for Vec3 {
     type Output = Self;
     fn add(self, rhs: Self) -> Self::Output {
+        (&self).add(&rhs)
+    }
+}
+
+impl<'a, 'b> Add<&'b Vec3> for &'a Vec3 {
+    type Output = Vec3;
+    fn add(self, rhs: &'b Vec3) -> Self::Output {
         Vec3 {
             values: [self.x() + rhs.x(), self.y() + rhs.y(), self.z() + rhs.z()],
         }
@@ -132,7 +140,14 @@ impl Add for Vec3 {
 impl Sub for Vec3 {
     type Output = Self;
     fn sub(self, rhs: Self) -> Self::Output {
-        Self {
+        (&self).sub(&rhs)
+    }
+}
+
+impl<'a, 'b> Sub<&'b Vec3> for &'a Vec3 {
+    type Output = Vec3;
+    fn sub(self, rhs: &'b Vec3) -> Self::Output {
+        Vec3 {
             values: [self.x() - rhs.x(), self.y() - rhs.y(), self.z() - rhs.z()],
         }
     }
@@ -153,6 +168,20 @@ impl Mul<f32> for &Vec3 {
         Vec3 {
             values: self.values.map(|v| v * rhs),
         }
+    }
+}
+
+impl Mul<Vec3> for f32 {
+    type Output = Vec3;
+    fn mul(self, rhs: Vec3) -> Self::Output {
+        (&rhs).mul(self)
+    }
+}
+
+impl Mul<&Vec3> for f32 {
+    type Output = Vec3;
+    fn mul(self, rhs: &Vec3) -> Self::Output {
+        rhs.mul(self)
     }
 }
 
