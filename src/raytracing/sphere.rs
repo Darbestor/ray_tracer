@@ -1,6 +1,9 @@
 use crate::math::vec3::Vec3;
 
-use super::{ray::Ray, ray_hit::RayHitTester};
+use super::{
+    ray::Ray,
+    ray_hit::{HitResult, Normal, RayHitTester},
+};
 
 pub struct Sphere {
     pub center: Vec3,
@@ -14,7 +17,7 @@ impl Sphere {
 }
 
 impl RayHitTester for Sphere {
-    /** Try to find [ray's](Ray) hit location for sphere
+    /** [`Ray`] hit test for sphere
 
     ## Returns
 
@@ -34,16 +37,33 @@ impl RayHitTester for Sphere {
 
     `C` - [Sphere](Sphere) center
     */
-    fn hit(&self, ray: &Ray) -> Option<f32> {
+    fn hit(&self, ray: &Ray, min_distance: f32, max_distance: f32) -> Option<HitResult> {
         let oc = ray.origin - &self.center;
         let a = ray.direction.length_squared();
         let half_b = oc.dot(ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
+
         if discriminant < 0. {
             None
-        } else {
-            Some((-half_b - f32::sqrt(discriminant)) / a)
         }
+        // Find the nearest root that lies in the acceptable range.
+        else {
+            let sqrtd = discriminant.sqrt();
+            let mut root = (-half_b - sqrtd) / a;
+            if root < min_distance || max_distance < root {
+                root = (-half_b + sqrtd) / a;
+                if root < min_distance || max_distance < root {
+                    return None;
+                }
+            }
+            Some(HitResult::new(self, ray, root))
+        }
+    }
+}
+
+impl Normal for Sphere {
+    fn get_normal(&self, location: &Vec3) -> Vec3 {
+        location - &(&self.center / self.radius)
     }
 }
