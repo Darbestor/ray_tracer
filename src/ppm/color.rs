@@ -1,5 +1,7 @@
 use thiserror::Error;
 
+use crate::math::vec3::Vec3;
+
 #[derive(Error, Debug)]
 #[error("Value must be between 0 and 1.0: {0}")]
 pub struct OutOfBoundsError(String);
@@ -32,20 +34,28 @@ impl Color {
         self.blue
     }
 
-    pub fn from_unit_range(red: f32, green: f32, blue: f32) -> Result<Self, OutOfBoundsError> {
-        if !red.is_sign_positive()
-            || !green.is_sign_positive()
-            || !blue.is_sign_positive()
-            || red > 1.0
-            || green > 1.0
-            || blue > 1.0
+    pub fn sampled_color(sampled: Vec3, n_samples: f32) -> Result<Color, OutOfBoundsError> {
+        let scale = 1. / n_samples;
+        Self::try_from(&sampled * scale)
+    }
+}
+
+impl TryFrom<Vec3> for Color {
+    type Error = OutOfBoundsError;
+    fn try_from(value: Vec3) -> Result<Self, Self::Error> {
+        if !value.x().is_sign_positive()
+            || !value.y().is_sign_positive()
+            || !value.z().is_sign_positive()
+            || value.x() > 1.0
+            || value.y() > 1.0
+            || value.z() > 1.0
         {
-            return Err(OutOfBoundsError(format!("{:?}", [red, green, blue])));
+            return Err(OutOfBoundsError(format!("{:?}", value)));
         }
 
-        let ir = (255.999 * red) as u8;
-        let ig = (255.999 * green) as u8;
-        let ib = (255.999 * blue) as u8;
+        let ir = (255.999 * value.x()) as u8;
+        let ig = (255.999 * value.y()) as u8;
+        let ib = (255.999 * value.z()) as u8;
         Ok(Self {
             red: ir,
             green: ig,
@@ -78,6 +88,8 @@ impl From<RGBColor> for Color {
 
 #[cfg(test)]
 mod test {
+    use crate::math::vec3::Vec3;
+
     use super::Color;
 
     #[test]
@@ -100,26 +112,26 @@ mod test {
 
     #[test]
     fn from_unit_range_test() {
-        let color = Color::from_unit_range(-1., 0., 0.);
+        let color = Color::try_from(Vec3::new(-1., 0., 0.));
         assert!(color.is_err());
-        let color = Color::from_unit_range(0., -1., 0.);
+        let color = Color::try_from(Vec3::new(0., -1., 0.));
         assert!(color.is_err());
-        let color = Color::from_unit_range(0., 0., -1.);
-        assert!(color.is_err());
-
-        let color = Color::from_unit_range(1. + f32::EPSILON, 0., 0.);
-        assert!(color.is_err());
-        let color = Color::from_unit_range(0., 1. + f32::EPSILON, 0.);
-        assert!(color.is_err());
-        let color = Color::from_unit_range(0., 0., 1. + f32::EPSILON);
+        let color = Color::try_from(Vec3::new(0., 0., -1.));
         assert!(color.is_err());
 
-        let color = Color::from_unit_range(0., 0., 0.).unwrap();
+        let color = Color::try_from(Vec3::new(1. + f32::EPSILON, 0., 0.));
+        assert!(color.is_err());
+        let color = Color::try_from(Vec3::new(0., 1. + f32::EPSILON, 0.));
+        assert!(color.is_err());
+        let color = Color::try_from(Vec3::new(0., 0., 1. + f32::EPSILON));
+        assert!(color.is_err());
+
+        let color = Color::try_from(Vec3::new(0., 0., 0.)).unwrap();
         assert_eq!(color.get_red(), 0);
         assert_eq!(color.get_green(), 0);
         assert_eq!(color.get_blue(), 0);
 
-        let color = Color::from_unit_range(0., 1., 0.5).unwrap();
+        let color = Color::try_from(Vec3::new(0., 1., 0.5)).unwrap();
         assert_eq!(color.get_red(), 0);
         assert_eq!(color.get_green(), 255);
         assert_eq!(color.get_blue(), 127);

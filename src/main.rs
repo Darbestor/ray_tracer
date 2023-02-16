@@ -1,3 +1,4 @@
+use rand::{thread_rng, Rng};
 use rust_ray_tracer::{
     math::vec3::Vec3,
     ppm::{color::Color, image::PpmImage},
@@ -6,28 +7,23 @@ use rust_ray_tracer::{
     },
 };
 
-fn ray_color(ray: &Ray, objects: &WorldObjects) -> Color {
+fn ray_pixel_color(ray: &Ray, objects: &WorldObjects) -> Vec3 {
     if let Some(hit) = objects.hit(ray, 0., f32::INFINITY) {
         let normal_color_vec = 0.5 * (hit.normal + Vec3::new(1., 1., 1.));
-        return Color::from_unit_range(
-            normal_color_vec.x(),
-            normal_color_vec.y(),
-            normal_color_vec.z(),
-        )
-        .unwrap();
+        return normal_color_vec;
     }
 
     let unit_direction = ray.direction.unit();
     let t = 0.5 * (unit_direction.y() + 1.0);
     // Blend between white and blue
-    let blender_color = (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0);
-    Color::from_unit_range(blender_color.x(), blender_color.y(), blender_color.z()).unwrap()
+    (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
 }
 
 fn main() {
     let aspect_ratio: f32 = 16.0 / 9.0;
     let width = 400;
     let height = (width as f32 / aspect_ratio) as usize;
+    let samples_per_pixel: f32 = 100.;
     let mut ppm = PpmImage::new(width, height);
     let camera = Camera::new(2.0, aspect_ratio * 2.0);
 
@@ -38,11 +34,17 @@ fn main() {
         ],
     };
 
+    let mut rng = thread_rng();
     for j in 0..height {
         for i in 0..width {
-            let x = i as f32 / (width - 1) as f32;
-            let y = (height - j) as f32 / (height - 1) as f32;
-            ppm.pixels[j * width + i] = ray_color(&camera.get_ray(x, y), &world_objects);
+            let mut pixel_color = Vec3::zero();
+            for _ in 0..samples_per_pixel as usize {
+                let x = (i as f32 + rng.gen::<f32>()) / (width - 1) as f32;
+                let y = (height as f32 - (j as f32 + rng.gen::<f32>())) / (height - 1) as f32;
+                pixel_color += ray_pixel_color(&camera.get_ray(x, y), &world_objects);
+            }
+            ppm.pixels[j * width + i] =
+                Color::sampled_color(pixel_color, samples_per_pixel).unwrap();
         }
     }
     let mut path = std::env::current_dir().unwrap();
