@@ -47,7 +47,7 @@ impl Camera {
 
     pub fn get_ray(&self, x: f32, y: f32) -> Ray {
         let direction =
-            self.lower_left_corner() + &(x * self.horizontal()) + y * self.vertical() - self.origin;
+            *self.lower_left_corner() + x * self.horizontal() + y * self.vertical() - self.origin;
         Ray::new(self.origin, direction)
     }
 }
