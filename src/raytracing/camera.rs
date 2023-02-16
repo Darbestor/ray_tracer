@@ -1,5 +1,7 @@
 use crate::math::vec3::Vec3;
 
+use super::ray::Ray;
+
 pub struct Camera {
     pub viewport_height: f32,
     pub viewport_width: f32,
@@ -41,5 +43,11 @@ impl Camera {
 
     pub const fn lower_left_corner(&self) -> &Vec3 {
         &self.lower_left_corner
+    }
+
+    pub fn get_ray(&self, x: f32, y: f32) -> Ray {
+        let direction =
+            self.lower_left_corner() + &(x * self.horizontal()) + y * self.vertical() - self.origin;
+        Ray::new(self.origin, direction)
     }
 }

@@ -38,9 +38,9 @@ impl RayHitTester for Sphere {
     `C` - [Sphere](Sphere) center
     */
     fn hit(&self, ray: &Ray, min_distance: f32, max_distance: f32) -> Option<HitResult> {
-        let oc = ray.origin - &self.center;
+        let oc = ray.origin - self.center;
         let a = ray.direction.length_squared();
-        let half_b = oc.dot(ray.direction);
+        let half_b = oc.dot(&ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
         let discriminant = half_b * half_b - a * c;
 

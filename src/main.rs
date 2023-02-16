@@ -34,20 +34,15 @@ fn main() {
     let world_objects = WorldObjects {
         objects: vec![
             Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5)),
-            Box::new(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)),
+            Box::new(Sphere::new(Vec3::new(0., -100.4, -1.), 100.)),
         ],
     };
 
     for j in 0..height {
         for i in 0..width {
-            let u = i as f32 / (width - 1) as f32;
-            let v = (height - j) as f32 / (height - 1) as f32;
-
-            let direction =
-                camera.lower_left_corner() + &(u * camera.horizontal()) + v * camera.vertical()
-                    - camera.origin;
-            let ray = Ray::new(&camera.origin, &direction);
-            ppm.pixels[j * width + i] = ray_color(&ray, &world_objects);
+            let x = i as f32 / (width - 1) as f32;
+            let y = (height - j) as f32 / (height - 1) as f32;
+            ppm.pixels[j * width + i] = ray_color(&camera.get_ray(x, y), &world_objects);
         }
     }
     let mut path = std::env::current_dir().unwrap();
