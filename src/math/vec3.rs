@@ -3,6 +3,8 @@ use std::{
     ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
+use rand::{thread_rng, Rng};
+
 /// 3-Dimensional vector
 #[derive(Debug, Default, Clone, Copy)]
 pub struct Vec3 {
@@ -66,6 +68,24 @@ impl Vec3 {
     /// Normalized vector's length
     pub fn unit(&self) -> Self {
         self / self.length()
+    }
+
+    pub fn random_unit() -> Self {
+        let mut rng = thread_rng();
+        Self {
+            values: [rng.gen(), rng.gen(), rng.gen()],
+        }
+    }
+
+    pub fn random(min: f32, max: f32) -> Self {
+        let mut rng = thread_rng();
+        Self {
+            values: [
+                rng.gen_range(min..max),
+                rng.gen_range(min..max),
+                rng.gen_range(min..max),
+            ],
+        }
     }
 }
 

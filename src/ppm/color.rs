@@ -34,9 +34,13 @@ impl Color {
         self.blue
     }
 
+    /// Divide the color by the number of samples and gamma-correct for gamma=2.0.    
     pub fn sampled_color(sampled: Vec3, n_samples: f32) -> Result<Color, OutOfBoundsError> {
         let scale = 1. / n_samples;
-        Self::try_from(&sampled * scale)
+        let x = f32::sqrt(sampled.x() * scale);
+        let y = f32::sqrt(sampled.x() * scale);
+        let z = f32::sqrt(sampled.x() * scale);
+        Self::try_from(Vec3::new(x, y, z))
     }
 }
 
