@@ -1,6 +1,9 @@
+use std::rc::Rc;
+
 use crate::math::vec3::Vec3;
 
 use super::{
+    material::Material,
     ray::Ray,
     ray_hit::{HitResult, Normal, RayHitTester},
 };
@@ -8,11 +11,16 @@ use super::{
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
+    pub material: Rc<Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32) -> Self {
-        Self { center, radius }
+    pub fn new(center: Vec3, radius: f32, material: Rc<Material>) -> Self {
+        Self {
+            center,
+            radius,
+            material,
+        }
     }
 }
 
@@ -57,7 +65,7 @@ impl RayHitTester for Sphere {
                     return None;
                 }
             }
-            Some(HitResult::new(self, ray, root))
+            Some(HitResult::new(self, ray, root, self.material.clone()))
         }
     }
 }

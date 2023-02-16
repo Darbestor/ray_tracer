@@ -1,16 +1,19 @@
+use std::rc::Rc;
+
 use crate::math::vec3::Vec3;
 
-use super::ray::Ray;
+use super::{material::Material, ray::Ray};
 
 pub struct HitResult {
     pub location: Vec3,
     pub normal: Vec3,
     pub distance: f32,
     pub front_face: bool,
+    pub material: Rc<Material>,
 }
 
 impl HitResult {
-    pub fn new<T: Normal>(object: &T, ray: &Ray, distance: f32) -> Self {
+    pub fn new<T: Normal>(object: &T, ray: &Ray, distance: f32, material: Rc<Material>) -> Self {
         let location = ray.at(distance);
         let mut normal = object.get_normal(&location);
         let front_face = ray.direction.dot(&normal) < 0.;
@@ -22,6 +25,7 @@ impl HitResult {
             normal,
             distance,
             front_face,
+            material,
         }
     }
 }

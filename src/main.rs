@@ -1,9 +1,16 @@
+use std::rc::Rc;
+
 use rand::{thread_rng, Rng};
 use rust_ray_tracer::{
-    math::{random_in_unit_sphere, vec3::Vec3},
+    math::vec3::Vec3,
     ppm::{color::Color, image::PpmImage},
     raytracing::{
-        camera::Camera, ray::Ray, ray_hit::RayHitTester, sphere::Sphere, world::WorldObjects,
+        camera::Camera,
+        material::{MatLabmertian, MatMetalic, Material, MaterialScatter},
+        ray::Ray,
+        ray_hit::RayHitTester,
+        sphere::Sphere,
+        world::WorldObjects,
     },
 };
 
@@ -13,14 +20,12 @@ fn ray_pixel_color(ray: &Ray, objects: &WorldObjects, depth: usize) -> Vec3 {
     }
 
     if let Some(hit) = objects.hit(ray, 0.001, f32::INFINITY) {
-        let target = hit.location + hit.normal + random_in_unit_sphere().norm();
-        let normal_color_vec = 0.5
-            * ray_pixel_color(
-                &Ray::new(hit.location, target - hit.location),
-                objects,
-                depth - 1,
-            );
-        return normal_color_vec;
+        if let Some(scatter_result) = hit.material.scatter(ray, &hit) {
+            return scatter_result.attenuation
+                * ray_pixel_color(&scatter_result.ray, objects, depth - 1);
+        } else {
+            return Vec3::zero();
+        }
     }
 
     let unit_direction = ray.direction.norm();
@@ -37,13 +42,33 @@ fn main() {
     let samples_per_pixel: f32 = 100.;
     let max_ray_bounces = 50;
 
+    //Materials
+    let material_ground = Rc::new(Material::Labmertian(MatLabmertian {
+        albedo: Vec3::new(0.8, 0.8, 0.0),
+    }));
+    let material_center = Rc::new(Material::Labmertian(MatLabmertian {
+        albedo: Vec3::new(0.7, 0.3, 0.3),
+    }));
+    let material_left = Rc::new(Material::Metalic(MatMetalic {
+        albedo: Vec3::new(0.8, 0.8, 0.8),
+    }));
+    let material_right = Rc::new(Material::Metalic(MatMetalic {
+        albedo: Vec3::new(0.8, 0.6, 0.2),
+    }));
+
     let mut ppm = PpmImage::new(width, height);
     let camera = Camera::new(2.0, aspect_ratio * 2.0);
 
     let world_objects = WorldObjects {
         objects: vec![
-            Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5)),
-            Box::new(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)),
+            Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
+            Box::new(Sphere::new(
+                Vec3::new(0., -100.5, -1.),
+                100.,
+                material_ground,
+            )),
+            Box::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
+            Box::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
         ],
     };
 
@@ -64,6 +89,6 @@ fn main() {
     }
     let mut path = std::env::current_dir().unwrap();
     path.push("images");
-    path.push("lambertian_reflection.ppm");
+    path.push("materials.ppm");
     ppm.save(path).unwrap();
 }
