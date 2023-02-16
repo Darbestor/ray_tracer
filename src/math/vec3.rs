@@ -65,8 +65,8 @@ impl Vec3 {
         }
     }
 
-    /// Normalized vector's length
-    pub fn unit(&self) -> Self {
+    /// Normalized vector, i.e. length of 1
+    pub fn norm(&self) -> Self {
         self / self.length()
     }
 

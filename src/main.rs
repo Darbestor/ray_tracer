@@ -13,7 +13,7 @@ fn ray_pixel_color(ray: &Ray, objects: &WorldObjects, depth: usize) -> Vec3 {
     }
 
     if let Some(hit) = objects.hit(ray, f32::EPSILON, f32::INFINITY) {
-        let target = hit.location + hit.normal + random_in_unit_sphere();
+        let target = hit.location + hit.normal + random_in_unit_sphere().norm();
         let normal_color_vec = 0.5
             * ray_pixel_color(
                 &Ray::new(hit.location, target - hit.location),
@@ -23,7 +23,7 @@ fn ray_pixel_color(ray: &Ray, objects: &WorldObjects, depth: usize) -> Vec3 {
         return normal_color_vec;
     }
 
-    let unit_direction = ray.direction.unit();
+    let unit_direction = ray.direction.norm();
     let t = 0.5 * (unit_direction.y() + 1.0);
     // Blend between white and blue
     (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
@@ -43,7 +43,7 @@ fn main() {
     let world_objects = WorldObjects {
         objects: vec![
             Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5)),
-            Box::new(Sphere::new(Vec3::new(0., -100.4, -1.), 100.)),
+            Box::new(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)),
         ],
     };
 
@@ -63,6 +63,7 @@ fn main() {
         }
     }
     let mut path = std::env::current_dir().unwrap();
-    path.push("example.ppm");
+    path.push("/images");
+    path.push("lambertian_reflection.ppm");
     ppm.save(path).unwrap();
 }
