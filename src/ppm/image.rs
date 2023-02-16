@@ -42,7 +42,7 @@ impl PpmImage {
     }
 
     fn write_header(&self, file: &mut File) -> io::Result<()> {
-        writeln!(file, "P3\n{} {}\n{}", self.height, self.width, 255)?;
+        writeln!(file, "P3\n{} {}\n{}", self.width, self.height, 255)?;
         Ok(())
     }
 }

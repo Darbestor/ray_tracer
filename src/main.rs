@@ -1,27 +1,35 @@
-use rust_ray_tracer::ppm::{color::Color, image::PpmImage};
+use std::mem;
+
+use rust_ray_tracer::{
+    math::vec3::Vec3,
+    ppm::{color::Color, image::PpmImage},
+    raytracing::{camera::Camera, ray::Ray},
+};
+
+fn ray_color(ray: &Ray) -> Color {
+    let unit_direction = ray.direction.unit();
+    let t = 0.5 * (unit_direction.y() + 1.0);
+    let vec_color = (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0);
+    Color::from_unit_range(vec_color.x(), vec_color.y(), vec_color.z()).unwrap()
+}
 
 fn main() {
-    let width = 256;
-    let height = 256;
+    let aspect_ratio: f32 = 16.0 / 9.0;
+    let width = 400;
+    let height = (width as f32 / aspect_ratio) as usize;
     let mut ppm = PpmImage::new(width, height);
-
-    // for (int j = image_height-1; j >= 0; --j) {
-    //     for (int i = 0; i < image_width; ++i) {
-    //         auto r = double(i) / (image_width-1);
-    //         auto g = double(j) / (image_height-1);
-    //         auto b = 0.25;
-
-    //         int ir = static_cast<int>(255.999 * r);
-    //         int ig = static_cast<int>(255.999 * g);
-    //         int ib = static_cast<int>(255.999 * b);
+    let camera = Camera::new(2.0, aspect_ratio * 2.0);
 
     for j in 0..height {
         for i in 0..width {
-            let r = i as f32 / (width - 1) as f32;
-            let g = j as f32 / (height - 1) as f32;
-            let b = 0.25;
+            let u = i as f32 / (width - 1) as f32;
+            let v = (height - j) as f32 / (height - 1) as f32;
 
-            ppm.pixels[j * height + i] = Color::from_unit_range(r, g, b).unwrap();
+            let direction =
+                camera.lower_left_corner() + &(u * camera.horizontal()) + v * camera.vertical()
+                    - camera.origin;
+            let ray = Ray::new(&camera.origin, &direction);
+            ppm.pixels[j * width + i] = ray_color(&ray);
         }
     }
     let mut path = std::env::current_dir().unwrap();

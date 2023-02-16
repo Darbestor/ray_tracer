@@ -1,10 +1,10 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Deref, DerefMut, Div, DivAssign, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub},
 };
 
 /// 3-Dimensional vector
-#[derive(Debug, Default)]
+#[derive(Debug, Default, Clone, Copy)]
 pub struct Vec3 {
     values: [f32; 3],
 }
@@ -75,27 +75,12 @@ impl Display for Vec3 {
     }
 }
 
-/// Access vector's values directly
-impl Deref for Vec3 {
-    type Target = [f32; 3];
-    fn deref(&self) -> &Self::Target {
-        &self.values
-    }
-}
-
-/// Access and mutate vector's values directly
-impl DerefMut for Vec3 {
-    fn deref_mut(&mut self) -> &mut Self::Target {
-        &mut self.values
-    }
-}
-
 /// Assign operations overrides
 impl AddAssign for Vec3 {
     fn add_assign(&mut self, rhs: Self) {
-        self[0] += rhs.x();
-        self[1] += rhs.y();
-        self[2] += rhs.z();
+        self.values[0] += rhs.x();
+        self.values[1] += rhs.y();
+        self.values[2] += rhs.z();
     }
 }
 

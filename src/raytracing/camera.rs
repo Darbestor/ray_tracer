@@ -17,9 +17,8 @@ impl Camera {
         let origin = Vec3::zero();
         let focal_length = 1.0;
 
-        let mut lower_left_corner = &origin - &(&horizontal / 2.);
-        lower_left_corner = &lower_left_corner - &(&vertical / 2.);
-        lower_left_corner = &lower_left_corner - &Vec3::new(0., 0., focal_length);
+        let lower_left_corner =
+            origin - &horizontal / 2. - &vertical / 2. - Vec3::new(0., 0., focal_length);
 
         Self {
             viewport_height,
