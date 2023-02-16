@@ -10,8 +10,15 @@ fn ray_color(ray: &Ray) -> Color {
         radius: 0.5,
     };
 
-    if TEST_SPHERE.hit(ray) {
-        return Color::new(255, 0, 0);
+    if let Some(hit) = TEST_SPHERE.hit(ray) {
+        let normal = (ray.at(hit) - Vec3::new(0., 0., -1.)).unit();
+        let normal_color_vec = 0.5 * Vec3::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
+        return Color::from_unit_range(
+            normal_color_vec.x(),
+            normal_color_vec.y(),
+            normal_color_vec.z(),
+        )
+        .unwrap();
     }
 
     let unit_direction = ray.direction.unit();

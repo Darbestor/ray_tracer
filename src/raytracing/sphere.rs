@@ -14,12 +14,18 @@ impl Sphere {
 }
 
 impl RayHitTester for Sphere {
-    /** If equation `t^2*b⋅b+2tb⋅(A−C)+(A−C)⋅(A−C)−r^2=0` has roots
+    /** Try to find [ray's](Ray) hit location for sphere
+
+    ## Returns
+
+    Closest distance to shere's hit location if found
+
+    ### Calculations
+    If equation `t^2*b⋅b+2tb⋅(A−C)+(A−C)⋅(A−C)−r^2=0` has roots
     then [Ray](Ray) hits sphere.
 
     1 root - hit circumference.
     2 roots - pass through sphere.
-
     `t` - distance from camera to hit point
 
     `b` - [Ray](Ray) direction
@@ -28,12 +34,16 @@ impl RayHitTester for Sphere {
 
     `C` - [Sphere](Sphere) center
     */
-    fn hit(&self, ray: &Ray) -> bool {
+    fn hit(&self, ray: &Ray) -> Option<f32> {
         let oc = ray.origin - &self.center;
         let a = ray.direction.dot(ray.direction);
         let b = 2.0 * oc.dot(ray.direction);
         let c = oc.dot(&oc) - self.radius * self.radius;
         let discriminant = b * b - 4. * a * c;
-        discriminant.is_sign_positive()
+        if discriminant < 0. {
+            None
+        } else {
+            Some((-b - f32::sqrt(discriminant)) / (2.0 * a))
+        }
     }
 }
