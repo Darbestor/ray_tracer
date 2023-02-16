@@ -64,6 +64,6 @@ impl RayHitTester for Sphere {
 
 impl Normal for Sphere {
     fn get_normal(&self, location: &Vec3) -> Vec3 {
-        location - &(&self.center / self.radius)
+        &(location - &self.center) / self.radius
     }
 }

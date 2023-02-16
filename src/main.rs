@@ -1,18 +1,14 @@
 use rust_ray_tracer::{
     math::vec3::Vec3,
     ppm::{color::Color, image::PpmImage},
-    raytracing::{camera::Camera, ray::Ray, ray_hit::RayHitTester, sphere::Sphere},
+    raytracing::{
+        camera::Camera, ray::Ray, ray_hit::RayHitTester, sphere::Sphere, world::WorldObjects,
+    },
 };
 
-fn ray_color(ray: &Ray) -> Color {
-    static TEST_SPHERE: Sphere = Sphere {
-        center: Vec3::new(0., 0., -1.),
-        radius: 0.5,
-    };
-
-    if let Some(hit) = TEST_SPHERE.hit(ray) {
-        let normal = (ray.at(hit) - Vec3::new(0., 0., -1.)).unit();
-        let normal_color_vec = 0.5 * Vec3::new(normal.x() + 1., normal.y() + 1., normal.z() + 1.);
+fn ray_color(ray: &Ray, objects: &WorldObjects) -> Color {
+    if let Some(hit) = objects.hit(ray, 0., f32::INFINITY) {
+        let normal_color_vec = 0.5 * (hit.normal + Vec3::new(1., 1., 1.));
         return Color::from_unit_range(
             normal_color_vec.x(),
             normal_color_vec.y(),
@@ -35,6 +31,13 @@ fn main() {
     let mut ppm = PpmImage::new(width, height);
     let camera = Camera::new(2.0, aspect_ratio * 2.0);
 
+    let world_objects = WorldObjects {
+        objects: vec![
+            Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5)),
+            Box::new(Sphere::new(Vec3::new(0., -100.5, -1.), 100.)),
+        ],
+    };
+
     for j in 0..height {
         for i in 0..width {
             let u = i as f32 / (width - 1) as f32;
@@ -44,7 +47,7 @@ fn main() {
                 camera.lower_left_corner() + &(u * camera.horizontal()) + v * camera.vertical()
                     - camera.origin;
             let ray = Ray::new(&camera.origin, &direction);
-            ppm.pixels[j * width + i] = ray_color(&ray);
+            ppm.pixels[j * width + i] = ray_color(&ray, &world_objects);
         }
     }
     let mut path = std::env::current_dir().unwrap();
