@@ -38,8 +38,8 @@ impl Color {
     pub fn sampled_color(sampled: Vec3, n_samples: f32) -> Result<Color, OutOfBoundsError> {
         let scale = 1. / n_samples;
         let x = f32::sqrt(sampled.x() * scale);
-        let y = f32::sqrt(sampled.x() * scale);
-        let z = f32::sqrt(sampled.x() * scale);
+        let y = f32::sqrt(sampled.y() * scale);
+        let z = f32::sqrt(sampled.z() * scale);
         Self::try_from(Vec3::new(x, y, z))
     }
 }

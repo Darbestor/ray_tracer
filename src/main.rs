@@ -63,7 +63,7 @@ fn main() {
         }
     }
     let mut path = std::env::current_dir().unwrap();
-    path.push("/images");
+    path.push("images");
     path.push("lambertian_reflection.ppm");
     ppm.save(path).unwrap();
 }
