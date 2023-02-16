@@ -12,7 +12,7 @@ fn ray_pixel_color(ray: &Ray, objects: &WorldObjects, depth: usize) -> Vec3 {
         return Vec3::zero();
     }
 
-    if let Some(hit) = objects.hit(ray, 0., f32::INFINITY) {
+    if let Some(hit) = objects.hit(ray, f32::EPSILON, f32::INFINITY) {
         let target = hit.location + hit.normal + random_in_unit_sphere();
         let normal_color_vec = 0.5
             * ray_pixel_color(
