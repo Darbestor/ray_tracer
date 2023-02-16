@@ -36,14 +36,14 @@ impl RayHitTester for Sphere {
     */
     fn hit(&self, ray: &Ray) -> Option<f32> {
         let oc = ray.origin - &self.center;
-        let a = ray.direction.dot(ray.direction);
-        let b = 2.0 * oc.dot(ray.direction);
-        let c = oc.dot(&oc) - self.radius * self.radius;
-        let discriminant = b * b - 4. * a * c;
+        let a = ray.direction.length_squared();
+        let half_b = oc.dot(ray.direction);
+        let c = oc.length_squared() - self.radius * self.radius;
+        let discriminant = half_b * half_b - a * c;
         if discriminant < 0. {
             None
         } else {
-            Some((-b - f32::sqrt(discriminant)) / (2.0 * a))
+            Some((-half_b - f32::sqrt(discriminant)) / a)
         }
     }
 }
