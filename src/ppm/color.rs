@@ -1,8 +1,8 @@
 use thiserror::Error;
 
 #[derive(Error, Debug)]
-#[error("Value must be between 0 and 1.0: {0:?}")]
-pub struct OutOfBoundsError([f32; 3]);
+#[error("Value must be between 0 and 1.0: {0}")]
+pub struct OutOfBoundsError(String);
 
 /// RGB color
 #[derive(Clone)]
@@ -40,7 +40,7 @@ impl Color {
             || green > 1.0
             || blue > 1.0
         {
-            return Err(OutOfBoundsError([red, green, blue]));
+            return Err(OutOfBoundsError(format!("{:?}", [red, green, blue])));
         }
 
         let ir = (255.999 * red) as u8;

@@ -1,16 +1,24 @@
-use std::mem;
-
 use rust_ray_tracer::{
     math::vec3::Vec3,
     ppm::{color::Color, image::PpmImage},
-    raytracing::{camera::Camera, ray::Ray},
+    raytracing::{camera::Camera, ray::Ray, ray_hit::RayHitTester, sphere::Sphere},
 };
 
 fn ray_color(ray: &Ray) -> Color {
+    static TEST_SPHERE: Sphere = Sphere {
+        center: Vec3::new(0., 0., -1.),
+        radius: 0.5,
+    };
+
+    if TEST_SPHERE.hit(ray) {
+        return Color::new(255, 0, 0);
+    }
+
     let unit_direction = ray.direction.unit();
     let t = 0.5 * (unit_direction.y() + 1.0);
-    let vec_color = (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0);
-    Color::from_unit_range(vec_color.x(), vec_color.y(), vec_color.z()).unwrap()
+    // Blend between white and blue
+    let blender_color = (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0);
+    Color::from_unit_range(blender_color.x(), blender_color.y(), blender_color.z()).unwrap()
 }
 
 fn main() {
