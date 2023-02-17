@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::{f32::consts::PI, rc::Rc};
 
 use rand::{thread_rng, Rng};
 use rust_ray_tracer::{
@@ -52,12 +52,29 @@ fn main() {
     let material_left = Rc::new(Material::Dielectric(MatDielectric {
         refraction_index: 1.7,
     }));
-    let material_right = Rc::new(Material::Dielectric(MatDielectric {
-        refraction_index: 1.3,
-    }));
+    let material_right = Rc::new(Material::Metalic(MatMetalic::new(
+        Vec3::new(0.8, 0.6, 0.2),
+        1.0,
+    )));
 
     let mut ppm = PpmImage::new(width, height);
-    let camera = Camera::new(2.0, aspect_ratio * 2.0);
+
+    // Camera
+    let lookfrom = Vec3::new(3., 3., 2.);
+    let lookat = Vec3::new(0., 0., -1.);
+    let vup = Vec3::new(0., 1., 0.);
+    let vfov = 20.0;
+    let dist_to_focus = (lookfrom - lookat).length();
+    let aperture = 2.0;
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        vup,
+        vfov,
+        aspect_ratio,
+        aperture,
+        dist_to_focus,
+    );
 
     let world_objects = WorldObjects {
         objects: vec![
@@ -89,6 +106,6 @@ fn main() {
     }
     let mut path = std::env::current_dir().unwrap();
     path.push("images");
-    path.push("dielectrics.ppm");
+    path.push("camera.ppm");
     ppm.save(path).unwrap();
 }

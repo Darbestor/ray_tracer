@@ -17,3 +17,13 @@ pub fn random_in_unit_sphere() -> Vec3 {
         }
     }
 }
+
+pub fn random_in_unit_disk() -> Vec3 {
+    loop {
+        let mut point = Vec3::random(-1., 1.);
+        point.set_z(0.);
+        if point.length_squared() < 1. {
+            break point;
+        }
+    }
+}
