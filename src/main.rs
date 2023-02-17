@@ -49,12 +49,14 @@ fn main() {
     let material_center = Rc::new(Material::Labmertian(MatLabmertian {
         albedo: Vec3::new(0.7, 0.3, 0.3),
     }));
-    let material_left = Rc::new(Material::Metalic(MatMetalic {
-        albedo: Vec3::new(0.8, 0.8, 0.8),
-    }));
-    let material_right = Rc::new(Material::Metalic(MatMetalic {
-        albedo: Vec3::new(0.8, 0.6, 0.2),
-    }));
+    let material_left = Rc::new(Material::Metalic(MatMetalic::new(
+        Vec3::new(0.8, 0.8, 0.8),
+        0.3,
+    )));
+    let material_right = Rc::new(Material::Metalic(MatMetalic::new(
+        Vec3::new(0.8, 0.6, 0.2),
+        1.0,
+    )));
 
     let mut ppm = PpmImage::new(width, height);
     let camera = Camera::new(2.0, aspect_ratio * 2.0);

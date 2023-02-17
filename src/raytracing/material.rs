@@ -14,6 +14,7 @@ pub struct MatLabmertian {
 
 pub struct MatMetalic {
     pub albedo: Vec3,
+    pub roughness: f32,
 }
 
 pub struct ScatterResult {
@@ -47,6 +48,13 @@ impl MaterialScatter for MatLabmertian {
 }
 
 impl MatMetalic {
+    pub fn new(albedo: Vec3, roughness: f32) -> Self {
+        Self {
+            albedo,
+            roughness: roughness.clamp(-1., 1.),
+        }
+    }
+
     /// `normal` must be normalized
     fn reflect(&self, v: &Vec3, normal: &Vec3) -> Vec3 {
         *v - 2. * v.dot(normal) * normal
@@ -56,7 +64,10 @@ impl MatMetalic {
 impl MaterialScatter for MatMetalic {
     fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let reflection = self.reflect(&ray.direction, &hit_result.normal);
-        let scattered = Ray::new(hit_result.location, reflection);
+        let scattered = Ray::new(
+            hit_result.location,
+            reflection + self.roughness * random_in_unit_sphere(),
+        );
 
         if scattered.direction.dot(&hit_result.normal) > 0. {
             Some(ScatterResult {
