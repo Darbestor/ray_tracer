@@ -120,7 +120,14 @@ impl DivAssign<f32> for Vec3 {
 impl Neg for Vec3 {
     type Output = Self;
     fn neg(self) -> Self::Output {
-        Self {
+        (&self).neg()
+    }
+}
+
+impl Neg for &Vec3 {
+    type Output = Vec3;
+    fn neg(self) -> Self::Output {
+        Vec3 {
             values: self.values.map(|v| -v),
         }
     }

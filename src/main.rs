@@ -6,7 +6,7 @@ use rust_ray_tracer::{
     ppm::{color::Color, image::PpmImage},
     raytracing::{
         camera::Camera,
-        material::{MatLabmertian, MatMetalic, Material, MaterialScatter},
+        material::{MatDielectric, MatLabmertian, MatMetalic, Material, MaterialScatter},
         ray::Ray,
         ray_hit::RayHitTester,
         sphere::Sphere,
@@ -49,14 +49,12 @@ fn main() {
     let material_center = Rc::new(Material::Labmertian(MatLabmertian {
         albedo: Vec3::new(0.7, 0.3, 0.3),
     }));
-    let material_left = Rc::new(Material::Metalic(MatMetalic::new(
-        Vec3::new(0.8, 0.8, 0.8),
-        0.3,
-    )));
-    let material_right = Rc::new(Material::Metalic(MatMetalic::new(
-        Vec3::new(0.8, 0.6, 0.2),
-        1.0,
-    )));
+    let material_left = Rc::new(Material::Dielectric(MatDielectric {
+        refraction_index: 1.7,
+    }));
+    let material_right = Rc::new(Material::Dielectric(MatDielectric {
+        refraction_index: 1.3,
+    }));
 
     let mut ppm = PpmImage::new(width, height);
     let camera = Camera::new(2.0, aspect_ratio * 2.0);
@@ -91,6 +89,6 @@ fn main() {
     }
     let mut path = std::env::current_dir().unwrap();
     path.push("images");
-    path.push("materials.ppm");
+    path.push("dielectrics.ppm");
     ppm.save(path).unwrap();
 }
