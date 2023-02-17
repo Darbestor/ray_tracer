@@ -1,3 +1,5 @@
+use rand::{thread_rng, Rng};
+
 /// TODO: Think about different design structure
 use crate::math::{random_in_unit_sphere, vec3::Vec3};
 
@@ -116,7 +118,10 @@ impl MaterialFunctions {
 
         let cannot_refract = refraction_ratio * sin_theta > 1.0;
 
-        if cannot_refract {
+        let mut rng = thread_rng();
+        if cannot_refract
+            || MaterialFunctions::reflectance(cos_theta, refraction_ratio) > rng.gen::<f32>()
+        {
             MaterialFunctions::reflect(v, normal)
         } else {
             let ray_out_perpendicular = refraction_ratio * (v + &(cos_theta * normal));
@@ -124,5 +129,12 @@ impl MaterialFunctions {
                 -f32::sqrt(f32::abs(1.0 - ray_out_perpendicular.length_squared())) * normal;
             ray_out_parallel + ray_out_perpendicular
         }
+    }
+
+    fn reflectance(cos_theta: f32, refraction_ratio: f32) -> f32 {
+        // Use Schlick's approximation for reflectance.
+        let mut r0 = (1. - refraction_ratio) / (1. + refraction_ratio);
+        r0 *= r0;
+        r0 + (1. - r0) * (1. - cos_theta).powi(5)
     }
 }
