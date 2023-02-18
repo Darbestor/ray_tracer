@@ -1,10 +1,7 @@
 use std::sync::Arc;
 
 use rand::{random, thread_rng, Rng};
-use rayon::prelude::IndexedParallelIterator;
-use rayon::prelude::{IntoParallelRefMutIterator, ParallelIterator};
-use rust_ray_tracer::raytracing::material::MaterialScatter;
-use rust_ray_tracer::raytracing::ray_hit::RayHitTester;
+
 use rust_ray_tracer::raytracing::renderer::Renderer;
 use rust_ray_tracer::{
     math::vec3::Vec3,
@@ -12,7 +9,6 @@ use rust_ray_tracer::{
     raytracing::{
         camera::Camera,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
-        ray::Ray,
         sphere::Sphere,
         world::WorldObjects,
     },
@@ -78,7 +74,7 @@ fn main() {
 
     let scene = renderer.render(width, height);
 
-    save_to_ppm(width, height, scene);
+    save_to_ppm("refactored", width, height, scene);
 }
 
 fn random_scene() -> WorldObjects {
@@ -149,7 +145,7 @@ fn random_scene() -> WorldObjects {
     world
 }
 
-fn save_to_ppm(width: usize, height: usize, scene: Vec<Vec3>) {
+fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {
     let mut ppm = PpmImage::new(width, height);
     ppm.pixels = scene
         .into_iter()
@@ -158,6 +154,6 @@ fn save_to_ppm(width: usize, height: usize, scene: Vec<Vec3>) {
 
     let mut path = std::env::current_dir().unwrap();
     path.push("images");
-    path.push("refactored.ppm");
+    path.push(filename);
     ppm.save(path).unwrap();
 }
