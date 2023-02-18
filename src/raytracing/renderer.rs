@@ -1,7 +1,7 @@
 use rand::{thread_rng, Rng};
 use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, ParallelIterator};
 
-use crate::math::vec3::Vec3;
+use crate::{math::vec3::Vec3, utils::progress_watcher::ProgressObserver};
 
 use super::{
     camera::Camera, material::MaterialScatter, ray::Ray, ray_hit::RayHitTester, world::WorldObjects,
@@ -24,8 +24,11 @@ impl Renderer {
         }
     }
 
+    /// Render scene using
     pub fn render(&self, width: usize, height: usize) -> Vec<Vec3> {
         let mut pixels = vec![Vec3::zero(); width * height];
+
+        let progress_bar = ProgressObserver::new(width * height).start();
         pixels.par_iter_mut().enumerate().for_each(|(p_ix, pixel)| {
             let mut rng = thread_rng();
             for _ in 0..self.samples_per_pixel {
@@ -40,7 +43,11 @@ impl Renderer {
             pixel.set_x(f32::sqrt(pixel.x() * scale));
             pixel.set_y(f32::sqrt(pixel.y() * scale));
             pixel.set_z(f32::sqrt(pixel.z() * scale));
+
+            // Update progress
+            progress_bar.increase(1);
         });
+
         pixels
     }
 

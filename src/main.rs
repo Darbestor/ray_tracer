@@ -74,7 +74,7 @@ fn main() {
 
     let scene = renderer.render(width, height);
 
-    save_to_ppm("refactored", width, height, scene);
+    save_to_ppm("refactored.ppm", width, height, scene);
 }
 
 fn random_scene() -> WorldObjects {
