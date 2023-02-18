@@ -6,9 +6,9 @@ pub struct Camera {
     pub viewport_height: f32,
     pub viewport_width: f32,
     pub origin: Vec3,
-    w: Vec3,
-    u: Vec3,
-    v: Vec3,
+    _basis_forward: Vec3,
+    basis_up: Vec3,
+    basis_left: Vec3,
     horizontal: Vec3,
     vertical: Vec3,
     lower_left_corner: Vec3,
@@ -19,7 +19,7 @@ impl Camera {
     pub fn new(
         lookfrom: Vec3,
         lookup: Vec3,
-        vup: Vec3,
+        rotation: Vec3,
         vfov: f32,
         aspect_ratio: f32,
         aperture: f32,
@@ -30,15 +30,16 @@ impl Camera {
         let viewport_height = 2.0 * h;
         let viewport_width = aspect_ratio * viewport_height;
 
-        let w = (lookfrom - lookup).norm();
-        let u = vup.cross(&w).norm();
-        let v = w.cross(&u);
+        let basis_forward = (lookfrom - lookup).norm();
+        let basis_up = rotation.cross(&basis_forward).norm();
+        let basis_left = basis_forward.cross(&basis_up);
 
-        let horizontal = focus_dist * viewport_width * u;
-        let vertical = focus_dist * viewport_height * v;
+        let horizontal = focus_dist * viewport_width * basis_up;
+        let vertical = focus_dist * viewport_height * basis_left;
         let origin = lookfrom;
 
-        let lower_left_corner = origin - &horizontal / 2. - &vertical / 2. - focus_dist * w;
+        let lower_left_corner =
+            origin - &horizontal / 2. - &vertical / 2. - focus_dist * basis_forward;
 
         Self {
             viewport_height,
@@ -48,9 +49,9 @@ impl Camera {
             vertical,
             lower_left_corner,
             lens_radius: aperture / 2.,
-            w,
-            u,
-            v,
+            _basis_forward: basis_forward,
+            basis_up,
+            basis_left,
         }
     }
 
@@ -68,7 +69,7 @@ impl Camera {
 
     pub fn get_ray(&self, x: f32, y: f32) -> Ray {
         let rd = self.lens_radius * random_in_unit_disk();
-        let offset = rd.x() * self.u + rd.y() * self.v;
+        let offset = rd.x() * self.basis_up + rd.y() * self.basis_left;
 
         let direction = self.lower_left_corner() + &(x * self.horizontal()) + y * self.vertical()
             - self.origin
