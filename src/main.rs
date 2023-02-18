@@ -25,7 +25,7 @@ fn main() {
     // Camera
     let lookfrom = Vec3::new(13., 2., 3.);
     let lookat = Vec3::new(0., 0., 0.);
-    let vup = Vec3::new(0., 1., 0.);
+    let rotation = Vec3::new(0., 1., 0.);
     let vfov = 20.0;
     let dist_to_focus = 10.;
     let aperture = 0.1;
@@ -33,7 +33,7 @@ fn main() {
     let camera = Camera::new(
         lookfrom,
         lookat,
-        vup,
+        rotation,
         vfov,
         aspect_ratio,
         aperture,
