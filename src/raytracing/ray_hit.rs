@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::math::vec3::Vec3;
 
@@ -9,11 +9,11 @@ pub struct HitResult {
     pub normal: Vec3,
     pub distance: f32,
     pub front_face: bool,
-    pub material: Rc<Material>,
+    pub material: Arc<Material>,
 }
 
 impl HitResult {
-    pub fn new<T: Normal>(object: &T, ray: &Ray, distance: f32, material: Rc<Material>) -> Self {
+    pub fn new<T: Normal>(object: &T, ray: &Ray, distance: f32, material: Arc<Material>) -> Self {
         let location = ray.at(distance);
         let mut normal = object.get_normal(&location);
         let front_face = ray.direction.dot(&normal) < 0.;

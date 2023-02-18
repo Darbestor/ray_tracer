@@ -2,7 +2,7 @@ use super::ray_hit::{HitResult, RayHitTester};
 
 #[derive(Default)]
 pub struct WorldObjects {
-    pub objects: Vec<Box<dyn RayHitTester>>,
+    pub objects: Vec<Box<dyn RayHitTester + Send + Sync>>,
 }
 
 impl WorldObjects {

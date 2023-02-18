@@ -1,4 +1,4 @@
-use std::rc::Rc;
+use std::sync::Arc;
 
 use crate::math::vec3::Vec3;
 
@@ -11,11 +11,11 @@ use super::{
 pub struct Sphere {
     pub center: Vec3,
     pub radius: f32,
-    pub material: Rc<Material>,
+    pub material: Arc<Material>,
 }
 
 impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Rc<Material>) -> Self {
+    pub fn new(center: Vec3, radius: f32, material: Arc<Material>) -> Self {
         Self {
             center,
             radius,
