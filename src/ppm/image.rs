@@ -16,7 +16,7 @@ impl PpmImage {
         Self {
             height,
             width,
-            pixels: vec![RGBColor::White.into(); width * height],
+            pixels: Vec::new(),
         }
     }
 
