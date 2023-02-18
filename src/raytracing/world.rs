@@ -1,7 +1,14 @@
 use super::ray_hit::{HitResult, RayHitTester};
 
+#[derive(Default)]
 pub struct WorldObjects {
     pub objects: Vec<Box<dyn RayHitTester>>,
+}
+
+impl WorldObjects {
+    pub fn new() -> Self {
+        Self { objects: vec![] }
+    }
 }
 
 impl RayHitTester for WorldObjects {
