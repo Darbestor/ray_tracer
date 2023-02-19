@@ -25,10 +25,14 @@ impl Renderer {
     }
 
     /// Render scene using
-    pub fn render(&self, width: usize, height: usize) -> Vec<Vec3> {
+    pub fn render(&self, width: usize, height: usize, show_progress: bool) -> Vec<Vec3> {
         let mut pixels = vec![Vec3::zero(); width * height];
 
-        let progress_bar = ProgressObserver::new(width * height).start();
+        let progress_bar = if show_progress {
+            Some(ProgressObserver::new(width * height).start())
+        } else {
+            None
+        };
         pixels.par_iter_mut().enumerate().for_each(|(p_ix, pixel)| {
             let mut rng = thread_rng();
             for _ in 0..self.samples_per_pixel {
@@ -45,7 +49,9 @@ impl Renderer {
             pixel.set_z(f32::sqrt(pixel.z() * scale));
 
             // Update progress
-            progress_bar.increase(1);
+            if show_progress {
+                progress_bar.as_ref().unwrap().increase(1);
+            }
         });
 
         pixels

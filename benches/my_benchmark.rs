@@ -1,89 +1,25 @@
-use std::sync::Arc;
+use std::{sync::Arc, time::Duration};
 
-use rand::rngs::StdRng;
-use rand::{Rng, SeedableRng};
-
-use rust_ray_tracer::raytracing::renderer::Renderer;
+use criterion::{criterion_group, criterion_main, Criterion};
+use rand::{rngs::StdRng, Rng, SeedableRng};
 use rust_ray_tracer::{
     math::vec3::Vec3,
-    ppm::{color::Color, image::PpmImage},
     raytracing::{
         camera::Camera,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
+        renderer::Renderer,
         sphere::Sphere,
         world::WorldObjects,
     },
 };
 
-fn main() {
-    // Constants
-    let aspect_ratio: f32 = 3.0 / 2.0;
-    let width = 1200;
-    let height = (width as f32 / aspect_ratio) as usize;
-    let samples_per_pixel = 100;
-    let max_ray_bounces = 50;
+static ASPECT_RATIO: f32 = 16. / 9.;
+static WIDTH: usize = 300;
+static HEIGHT: usize = (WIDTH as f32 / ASPECT_RATIO) as usize;
+static SAMPLES_PER_PIXEL: usize = 100;
+static MAX_RAY_BOUNCES: usize = 50;
 
-    // Camera
-    let lookfrom = Vec3::new(13., 2., 3.);
-    let lookat = Vec3::new(0., 0., 0.);
-    let rotation = Vec3::new(0., 1., 0.);
-    let vfov = 20.0;
-    let dist_to_focus = 10.;
-    let aperture = 0.1;
-
-    let camera = Camera::new(
-        lookfrom,
-        lookat,
-        rotation,
-        vfov,
-        aspect_ratio,
-        aperture,
-        dist_to_focus,
-    );
-
-    let mut renderer = Renderer::init(camera, samples_per_pixel, max_ray_bounces);
-
-    renderer.objects = random_scene();
-
-    let scene = renderer.render(width, height);
-
-    save_to_ppm("refactored.ppm", width, height, scene);
-}
-
-#[allow(dead_code)]
-fn test_scene() -> WorldObjects {
-    //Materials
-    let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.8, 0.8, 0.0),
-    }));
-    let material_center = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.7, 0.3, 0.3),
-    }));
-    let material_left = Arc::new(Material::Dielectric(MatDielectric {
-        refraction_index: 1.7,
-    }));
-    let material_right = Arc::new(Material::Metalic(MatMetalic::new(
-        Vec3::new(0.8, 0.6, 0.2),
-        1.0,
-    )));
-
-    // Objects
-    WorldObjects {
-        objects: vec![
-            Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
-            Box::new(Sphere::new(
-                Vec3::new(0., -100.5, -1.),
-                100.,
-                material_ground,
-            )),
-            Box::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
-            Box::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
-        ],
-    }
-}
-
-#[allow(dead_code)]
-fn random_scene() -> WorldObjects {
+fn scene() -> WorldObjects {
     let mut world = WorldObjects::new();
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
@@ -151,15 +87,46 @@ fn random_scene() -> WorldObjects {
     world
 }
 
-fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {
-    let mut ppm = PpmImage::new(width, height);
-    ppm.pixels = scene
-        .into_iter()
-        .map(|p| Color::try_from(p).unwrap())
-        .collect();
+fn setup_render() -> Renderer {
+    // Camera
+    let lookfrom = Vec3::new(5., 2., 3.);
+    let lookat = Vec3::new(0., 0., 0.);
+    let rotation = Vec3::new(0., 1., 0.);
+    let vfov = 90.0;
+    let dist_to_focus = 5.;
+    let aperture = 0.1;
 
-    let mut path = std::env::current_dir().unwrap();
-    path.push("images");
-    path.push(filename);
-    ppm.save(path).unwrap();
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        rotation,
+        vfov,
+        ASPECT_RATIO,
+        aperture,
+        dist_to_focus,
+    );
+
+    Renderer::init(camera, SAMPLES_PER_PIXEL, MAX_RAY_BOUNCES)
 }
+
+fn criterion_benchmark(c: &mut Criterion) {
+    let mut renderer = setup_render();
+
+    let mut group = c.benchmark_group("raytracing");
+    group.sample_size(30);
+    group.warm_up_time(Duration::from_secs(10));
+
+    group.bench_function("parallel raytracing", |b| {
+        b.iter_batched(
+            scene,
+            |scene| {
+                renderer.objects = scene;
+                renderer.render(WIDTH, HEIGHT, false)
+            },
+            criterion::BatchSize::PerIteration,
+        );
+    });
+}
+
+criterion_group!(benches, criterion_benchmark);
+criterion_main!(benches);
