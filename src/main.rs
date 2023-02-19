@@ -45,7 +45,7 @@ fn main() {
 
     renderer.objects = random_scene();
 
-    let scene = renderer.render(width, height);
+    let scene = renderer.render(width, height, true);
 
     save_to_ppm("refactored.ppm", width, height, scene);
 }
