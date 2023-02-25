@@ -8,23 +8,42 @@ use super::{
     ray_hit::{HitResult, Normal, RayHitTester},
 };
 
-pub struct Sphere {
-    pub center: Vec3,
+pub struct MovingSphere {
+    pub center_start: Vec3,
+    pub center_end: Vec3,
+    pub time_start: f32,
+    pub time_end: f32,
     pub radius: f32,
     pub material: Arc<Material>,
 }
 
-impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Arc<Material>) -> Self {
+impl MovingSphere {
+    pub fn new(
+        center_start: Vec3,
+        center_end: Vec3,
+        time_start: f32,
+        time_end: f32,
+        radius: f32,
+        material: Arc<Material>,
+    ) -> Self {
         Self {
-            center,
+            center_start,
+            center_end,
+            time_start,
+            time_end,
             radius,
             material,
         }
     }
+
+    pub fn center(&self, time: f32) -> Vec3 {
+        self.center_start
+            + ((time - self.time_start) / (self.time_end - self.time_start))
+                * (self.center_end - self.center_start)
+    }
 }
 
-impl RayHitTester for Sphere {
+impl RayHitTester for MovingSphere {
     /** [`Ray`] hit test for sphere
 
     ## Returns
@@ -46,7 +65,7 @@ impl RayHitTester for Sphere {
     `C` - [Sphere](Sphere) center
     */
     fn hit(&self, ray: &Ray, min_distance: f32, max_distance: f32) -> Option<HitResult> {
-        let oc = ray.origin - self.center;
+        let oc = ray.origin - self.center(ray.time);
         let a = ray.direction.length_squared();
         let half_b = oc.dot(&ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -70,8 +89,8 @@ impl RayHitTester for Sphere {
     }
 }
 
-impl Normal for Sphere {
+impl Normal for MovingSphere {
     fn get_normal(&self, location: &Vec3, ray: &Ray) -> Vec3 {
-        &(location - &self.center) / self.radius
+        &(location - &self.center(ray.time)) / self.radius
     }
 }

@@ -15,7 +15,7 @@ pub struct HitResult {
 impl HitResult {
     pub fn new<T: Normal>(object: &T, ray: &Ray, distance: f32, material: Arc<Material>) -> Self {
         let location = ray.at(distance);
-        let mut normal = object.get_normal(&location);
+        let mut normal = object.get_normal(&location, ray);
         let front_face = ray.direction.dot(&normal) < 0.;
         if !front_face {
             normal = -normal;
@@ -31,7 +31,7 @@ impl HitResult {
 }
 
 pub trait Normal {
-    fn get_normal(&self, location: &Vec3) -> Vec3;
+    fn get_normal(&self, location: &Vec3, ray: &Ray) -> Vec3;
 }
 
 /// Test on ray intersetion with object

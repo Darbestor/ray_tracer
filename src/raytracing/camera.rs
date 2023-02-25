@@ -1,3 +1,5 @@
+use rand::{thread_rng, Rng};
+
 use crate::math::{degrees_to_radians, random_in_unit_disk, vec3::Vec3};
 
 use super::ray::Ray;
@@ -13,6 +15,8 @@ pub struct Camera {
     vertical: Vec3,
     lower_left_corner: Vec3,
     lens_radius: f32,
+    time0: f32, // shutter open time
+    time1: f32, // shutter close time
 }
 
 impl Camera {
@@ -24,6 +28,8 @@ impl Camera {
         aspect_ratio: f32,
         aperture: f32,
         focus_dist: f32,
+        time0: f32,
+        time1: f32,
     ) -> Self {
         let theta = degrees_to_radians(vfov);
         let h = f32::tan(theta / 2.0);
@@ -52,6 +58,8 @@ impl Camera {
             _basis_forward: basis_forward,
             basis_up,
             basis_left,
+            time0,
+            time1,
         }
     }
 
@@ -74,6 +82,10 @@ impl Camera {
         let direction = self.lower_left_corner() + &(x * self.horizontal()) + y * self.vertical()
             - self.origin
             - offset;
-        Ray::new(self.origin + offset, direction)
+        Ray::new(
+            self.origin + offset,
+            direction,
+            thread_rng().gen_range(self.time0..self.time1),
+        )
     }
 }

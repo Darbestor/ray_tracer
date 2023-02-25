@@ -3,6 +3,7 @@ use std::sync::Arc;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
+use rust_ray_tracer::raytracing::moving_sphere::MovingSphere;
 use rust_ray_tracer::raytracing::renderer::Renderer;
 use rust_ray_tracer::{
     math::vec3::Vec3,
@@ -17,8 +18,8 @@ use rust_ray_tracer::{
 
 fn main() {
     // Constants
-    let aspect_ratio: f32 = 3.0 / 2.0;
-    let width = 1200;
+    let aspect_ratio: f32 = 16.0 / 9.0;
+    let width = 400;
     let height = (width as f32 / aspect_ratio) as usize;
     let samples_per_pixel = 100;
     let max_ray_bounces = 50;
@@ -30,6 +31,8 @@ fn main() {
     let vfov = 20.0;
     let dist_to_focus = 10.;
     let aperture = 0.1;
+    let time0 = 0.;
+    let time1 = 1.;
 
     let camera = Camera::new(
         lookfrom,
@@ -39,6 +42,8 @@ fn main() {
         aspect_ratio,
         aperture,
         dist_to_focus,
+        time0,
+        time1,
     );
 
     let mut renderer = Renderer::init(camera, samples_per_pixel, max_ray_bounces);
@@ -47,7 +52,7 @@ fn main() {
 
     let scene = renderer.render(width, height, true);
 
-    save_to_ppm("refactored.ppm", width, height, scene);
+    save_to_ppm("blur.ppm", width, height, scene);
 }
 
 #[allow(dead_code)]
@@ -105,24 +110,37 @@ fn random_scene() -> WorldObjects {
                 b as f32 + 0.9 * rng.gen::<f32>(),
             );
             if (center - Vec3::new(4., 0.2, 0.)).length() > 0.9 {
-                let sphere_material = if choose_mat < 0.8 {
+                if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
-                    Arc::new(Material::Labmertian(MatLabmertian { albedo }))
+                    let sphere_material = Arc::new(Material::Labmertian(MatLabmertian { albedo }));
+                    let center2 = center + Vec3::new(0., rng.gen_range(0.0..0.5), 0.);
+                    world.objects.push(Box::new(MovingSphere::new(
+                        center,
+                        center2,
+                        0.0,
+                        1.0,
+                        0.2,
+                        sphere_material,
+                    )));
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::random(0.5, 1.);
                     let roughness = rng.gen_range(0.0..0.5);
-                    Arc::new(Material::Metalic(MatMetalic { albedo, roughness }))
+                    let sphere_material =
+                        Arc::new(Material::Metalic(MatMetalic { albedo, roughness }));
+                    world
+                        .objects
+                        .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
                     // glass
-                    Arc::new(Material::Dielectric(MatDielectric {
+                    let sphere_material = Arc::new(Material::Dielectric(MatDielectric {
                         refraction_index: 1.5,
-                    }))
+                    }));
+                    world
+                        .objects
+                        .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
                 };
-                world
-                    .objects
-                    .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
             }
         }
     }

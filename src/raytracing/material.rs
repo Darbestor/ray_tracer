@@ -44,10 +44,14 @@ impl MaterialScatter for Material {
 }
 
 impl MaterialScatter for MatLabmertian {
-    fn scatter(&self, _: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+    fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let scatter_direction =
             hit_result.location + hit_result.normal + random_in_unit_sphere().norm();
-        let scattered = Ray::new(hit_result.location, scatter_direction - hit_result.location);
+        let scattered = Ray::new(
+            hit_result.location,
+            scatter_direction - hit_result.location,
+            in_ray.time,
+        );
         Some(ScatterResult {
             attenuation: self.albedo,
             ray: scattered,
@@ -65,11 +69,12 @@ impl MatMetalic {
 }
 
 impl MaterialScatter for MatMetalic {
-    fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
-        let reflection = MaterialFunctions::reflect(&ray.direction, &hit_result.normal);
+    fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+        let reflection = MaterialFunctions::reflect(&in_ray.direction, &hit_result.normal);
         let scattered = Ray::new(
             hit_result.location,
             reflection + self.roughness * random_in_unit_sphere(),
+            in_ray.time,
         );
 
         if scattered.direction.dot(&hit_result.normal) > 0. {
@@ -88,18 +93,21 @@ impl MatDielectric {
 }
 
 impl MaterialScatter for MatDielectric {
-    fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+    fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let refraction_ratio = if hit_result.front_face {
             1.0 / self.refraction_index
         } else {
             self.refraction_index
         };
 
-        let refracted =
-            MaterialFunctions::refract(&ray.direction.norm(), &hit_result.normal, refraction_ratio);
+        let refracted = MaterialFunctions::refract(
+            &in_ray.direction.norm(),
+            &hit_result.normal,
+            refraction_ratio,
+        );
         Some(ScatterResult {
             attenuation: MatDielectric::ALBEDO,
-            ray: Ray::new(hit_result.location, refracted),
+            ray: Ray::new(hit_result.location, refracted, in_ray.time),
         })
     }
 }
