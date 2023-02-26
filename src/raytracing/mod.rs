@@ -1,4 +1,6 @@
+pub mod aabb;
 pub mod camera;
+pub mod hittable;
 pub mod material;
 pub mod moving_sphere;
 pub mod ray;

@@ -1,6 +1,6 @@
 use std::{
     fmt::Display,
-    ops::{Add, AddAssign, Div, DivAssign, Mul, MulAssign, Neg, Sub},
+    ops::{Add, AddAssign, Div, DivAssign, Index, Mul, MulAssign, Neg, Sub},
 };
 
 use rand::{thread_rng, Rng};
@@ -213,6 +213,13 @@ impl Div<f32> for &Vec3 {
     type Output = Vec3;
     fn div(self, rhs: f32) -> Self::Output {
         self.mul(1. / rhs)
+    }
+}
+
+impl Index<usize> for Vec3 {
+    type Output = f32;
+    fn index(&self, index: usize) -> &Self::Output {
+        &self.values[index]
     }
 }
 

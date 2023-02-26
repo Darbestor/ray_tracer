@@ -3,6 +3,8 @@ use std::sync::Arc;
 use crate::math::vec3::Vec3;
 
 use super::{
+    aabb::{BoundingBox, AABB},
+    hittable::Hittable,
     material::Material,
     ray::Ray,
     ray_hit::{HitResult, Normal, RayHitTester},
@@ -23,6 +25,8 @@ impl Sphere {
         }
     }
 }
+
+impl Hittable for Sphere {}
 
 impl RayHitTester for Sphere {
     /** [`Ray`] hit test for sphere
@@ -71,7 +75,16 @@ impl RayHitTester for Sphere {
 }
 
 impl Normal for Sphere {
-    fn get_normal(&self, location: &Vec3, ray: &Ray) -> Vec3 {
+    fn get_normal(&self, location: &Vec3, _: &Ray) -> Vec3 {
         &(location - &self.center) / self.radius
+    }
+}
+
+impl BoundingBox for Sphere {
+    fn bounding_box(&self, _: f32, _: f32) -> Option<super::aabb::AABB> {
+        Some(AABB::new(
+            self.center - Vec3::new(self.radius, self.radius, self.radius),
+            self.center + Vec3::new(self.radius, self.radius, self.radius),
+        ))
     }
 }

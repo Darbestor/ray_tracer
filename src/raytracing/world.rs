@@ -1,8 +1,12 @@
-use super::ray_hit::{HitResult, RayHitTester};
+use super::{
+    aabb::BoundingBox,
+    hittable::Hittable,
+    ray_hit::{HitResult, RayHitTester},
+};
 
 #[derive(Default)]
 pub struct WorldObjects {
-    pub objects: Vec<Box<dyn RayHitTester + Send + Sync>>,
+    pub objects: Vec<Box<dyn Hittable + Send + Sync>>,
 }
 
 impl WorldObjects {
@@ -28,5 +32,27 @@ impl RayHitTester for WorldObjects {
             }
         }
         temp_hit_result
+    }
+}
+
+impl BoundingBox for WorldObjects {
+    fn bounding_box(&self, start_time: f32, end_time: f32) -> Option<super::aabb::AABB> {
+        if self.objects.is_empty() {
+            return None;
+        }
+
+        let mut temp_box = None;
+        for obj in &self.objects {
+            if let Some(bb) = obj.bounding_box(start_time, end_time) {
+                temp_box = if let Some(tb) = temp_box {
+                    Some(<Self as BoundingBox>::surrounding_box(&bb, &tb))
+                } else {
+                    Some(bb)
+                };
+            } else {
+                return None;
+            }
+        }
+        temp_box
     }
 }

@@ -3,6 +3,8 @@ use std::sync::Arc;
 use crate::math::vec3::Vec3;
 
 use super::{
+    aabb::{BoundingBox, AABB},
+    hittable::Hittable,
     material::Material,
     ray::Ray,
     ray_hit::{HitResult, Normal, RayHitTester},
@@ -42,6 +44,8 @@ impl MovingSphere {
                 * (self.center_end - self.center_start)
     }
 }
+
+impl Hittable for MovingSphere {}
 
 impl RayHitTester for MovingSphere {
     /** [`Ray`] hit test for sphere
@@ -92,5 +96,21 @@ impl RayHitTester for MovingSphere {
 impl Normal for MovingSphere {
     fn get_normal(&self, location: &Vec3, ray: &Ray) -> Vec3 {
         &(location - &self.center(ray.time)) / self.radius
+    }
+}
+
+impl BoundingBox for MovingSphere {
+    fn bounding_box(&self, start_time: f32, end_time: f32) -> Option<super::aabb::AABB> {
+        let box_start = AABB::new(
+            self.center(start_time) - Vec3::new(self.radius, self.radius, self.radius),
+            self.center(start_time) + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        let box_end = AABB::new(
+            self.center(end_time) - Vec3::new(self.radius, self.radius, self.radius),
+            self.center(end_time) + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        Some(<MovingSphere as BoundingBox>::surrounding_box(
+            &box_start, &box_end,
+        ))
     }
 }
