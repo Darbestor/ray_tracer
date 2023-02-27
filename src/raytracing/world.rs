@@ -1,19 +1,23 @@
+use std::sync::Arc;
+
 use super::{
-    aabb::BoundingBox,
+    aabb::{BoundingBox, BoundingBoxError},
     hittable::Hittable,
     ray_hit::{HitResult, RayHitTester},
 };
 
 #[derive(Default)]
 pub struct WorldObjects {
-    pub objects: Vec<Box<dyn Hittable + Send + Sync>>,
+    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
 }
 
 impl WorldObjects {
-    pub fn new() -> Self {
-        Self { objects: vec![] }
+    pub fn new(objects: Vec<Arc<dyn Hittable + Send + Sync>>) -> Self {
+        Self { objects }
     }
 }
+
+impl Hittable for WorldObjects {}
 
 impl RayHitTester for WorldObjects {
     fn hit(
@@ -36,23 +40,27 @@ impl RayHitTester for WorldObjects {
 }
 
 impl BoundingBox for WorldObjects {
-    fn bounding_box(&self, start_time: f32, end_time: f32) -> Option<super::aabb::AABB> {
+    fn bounding_box(
+        &self,
+        start_time: f32,
+        end_time: f32,
+    ) -> Result<super::aabb::AABB, BoundingBoxError> {
         if self.objects.is_empty() {
-            return None;
+            return Err(BoundingBoxError);
         }
 
         let mut temp_box = None;
         for obj in &self.objects {
-            if let Some(bb) = obj.bounding_box(start_time, end_time) {
+            if let Ok(bb) = obj.bounding_box(start_time, end_time) {
                 temp_box = if let Some(tb) = temp_box {
                     Some(<Self as BoundingBox>::surrounding_box(&bb, &tb))
                 } else {
                     Some(bb)
                 };
             } else {
-                return None;
+                return Err(BoundingBoxError);
             }
         }
-        temp_box
+        temp_box.ok_or(BoundingBoxError)
     }
 }

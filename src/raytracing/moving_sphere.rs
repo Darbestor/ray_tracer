@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::math::vec3::Vec3;
 
 use super::{
-    aabb::{BoundingBox, AABB},
+    aabb::{BoundingBox, BoundingBoxError, AABB},
     hittable::Hittable,
     material::Material,
     ray::Ray,
@@ -100,7 +100,11 @@ impl Normal for MovingSphere {
 }
 
 impl BoundingBox for MovingSphere {
-    fn bounding_box(&self, start_time: f32, end_time: f32) -> Option<super::aabb::AABB> {
+    fn bounding_box(
+        &self,
+        start_time: f32,
+        end_time: f32,
+    ) -> Result<super::aabb::AABB, BoundingBoxError> {
         let box_start = AABB::new(
             self.center(start_time) - Vec3::new(self.radius, self.radius, self.radius),
             self.center(start_time) + Vec3::new(self.radius, self.radius, self.radius),
@@ -109,7 +113,7 @@ impl BoundingBox for MovingSphere {
             self.center(end_time) - Vec3::new(self.radius, self.radius, self.radius),
             self.center(end_time) + Vec3::new(self.radius, self.radius, self.radius),
         );
-        Some(<MovingSphere as BoundingBox>::surrounding_box(
+        Ok(<MovingSphere as BoundingBox>::surrounding_box(
             &box_start, &box_end,
         ))
     }

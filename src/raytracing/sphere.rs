@@ -3,7 +3,7 @@ use std::sync::Arc;
 use crate::math::vec3::Vec3;
 
 use super::{
-    aabb::{BoundingBox, AABB},
+    aabb::{BoundingBox, BoundingBoxError, AABB},
     hittable::Hittable,
     material::Material,
     ray::Ray,
@@ -81,8 +81,8 @@ impl Normal for Sphere {
 }
 
 impl BoundingBox for Sphere {
-    fn bounding_box(&self, _: f32, _: f32) -> Option<super::aabb::AABB> {
-        Some(AABB::new(
+    fn bounding_box(&self, _: f32, _: f32) -> Result<super::aabb::AABB, BoundingBoxError> {
+        Ok(AABB::new(
             self.center - Vec3::new(self.radius, self.radius, self.radius),
             self.center + Vec3::new(self.radius, self.radius, self.radius),
         ))

@@ -3,6 +3,8 @@ use std::sync::Arc;
 use rand::rngs::StdRng;
 use rand::{Rng, SeedableRng};
 
+use rust_ray_tracer::raytracing::bvh::BvhNode;
+use rust_ray_tracer::raytracing::hittable::Hittable;
 use rust_ray_tracer::raytracing::moving_sphere::MovingSphere;
 use rust_ray_tracer::raytracing::renderer::Renderer;
 use rust_ray_tracer::{
@@ -12,7 +14,6 @@ use rust_ray_tracer::{
         camera::Camera,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
         sphere::Sphere,
-        world::WorldObjects,
     },
 };
 
@@ -31,8 +32,8 @@ fn main() {
     let vfov = 20.0;
     let dist_to_focus = 10.;
     let aperture = 0.1;
-    let time0 = 0.;
-    let time1 = 1.;
+    let start_time = 0.;
+    let end_time = 1.;
 
     let camera = Camera::new(
         lookfrom,
@@ -42,21 +43,24 @@ fn main() {
         aspect_ratio,
         aperture,
         dist_to_focus,
-        time0,
-        time1,
+        start_time,
+        end_time,
     );
 
-    let mut renderer = Renderer::init(camera, samples_per_pixel, max_ray_bounces);
-
-    renderer.objects = random_scene();
+    let renderer = Renderer::init(
+        camera,
+        samples_per_pixel,
+        max_ray_bounces,
+        Box::new(random_scene(start_time, end_time)),
+    );
 
     let scene = renderer.render(width, height, true);
 
-    save_to_ppm("blur.ppm", width, height, scene);
+    save_to_ppm("bvh.ppm", width, height, scene);
 }
 
 #[allow(dead_code)]
-fn test_scene() -> WorldObjects {
+fn test_scene(start_time: f32, end_time: f32) -> BvhNode {
     //Materials
     let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
         albedo: Vec3::new(0.8, 0.8, 0.0),
@@ -73,28 +77,27 @@ fn test_scene() -> WorldObjects {
     )));
 
     // Objects
-    WorldObjects {
-        objects: vec![
-            Box::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
-            Box::new(Sphere::new(
-                Vec3::new(0., -100.5, -1.),
-                100.,
-                material_ground,
-            )),
-            Box::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
-            Box::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
-        ],
-    }
+    let objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![
+        Arc::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
+        Arc::new(Sphere::new(
+            Vec3::new(0., -100.5, -1.),
+            100.,
+            material_ground,
+        )),
+        Arc::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
+        Arc::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
+    ];
+    BvhNode::new(&objects, start_time, end_time).unwrap()
 }
 
 #[allow(dead_code)]
-fn random_scene() -> WorldObjects {
-    let mut world = WorldObjects::new();
+fn random_scene(start_time: f32, end_time: f32) -> BvhNode {
+    let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![];
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
         albedo: Vec3::new(0.5, 0.5, 0.5),
     }));
-    world.objects.push(Box::new(Sphere::new(
+    objects.push(Arc::new(Sphere::new(
         Vec3::new(0., -1000., 0.),
         1000.,
         ground_material,
@@ -115,11 +118,11 @@ fn random_scene() -> WorldObjects {
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
                     let sphere_material = Arc::new(Material::Labmertian(MatLabmertian { albedo }));
                     let center2 = center + Vec3::new(0., rng.gen_range(0.0..0.5), 0.);
-                    world.objects.push(Box::new(MovingSphere::new(
+                    objects.push(Arc::new(MovingSphere::new(
                         center,
                         center2,
-                        0.0,
-                        1.0,
+                        start_time,
+                        end_time,
                         0.2,
                         sphere_material,
                     )));
@@ -129,17 +132,13 @@ fn random_scene() -> WorldObjects {
                     let roughness = rng.gen_range(0.0..0.5);
                     let sphere_material =
                         Arc::new(Material::Metalic(MatMetalic { albedo, roughness }));
-                    world
-                        .objects
-                        .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    objects.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 } else {
                     // glass
                     let sphere_material = Arc::new(Material::Dielectric(MatDielectric {
                         refraction_index: 1.5,
                     }));
-                    world
-                        .objects
-                        .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                    objects.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
                 };
             }
         }
@@ -148,25 +147,20 @@ fn random_scene() -> WorldObjects {
     let material = Arc::new(Material::Dielectric(MatDielectric {
         refraction_index: 1.5,
     }));
-    world
-        .objects
-        .push(Box::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
+    objects.push(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Labmertian(MatLabmertian {
         albedo: Vec3::new(0.4, 0.2, 0.1),
     }));
-    world
-        .objects
-        .push(Box::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
+    objects.push(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Metalic(MatMetalic {
         albedo: Vec3::new(0.7, 0.6, 0.5),
         roughness: 0.0,
     }));
-    world
-        .objects
-        .push(Box::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
-    world
+    objects.push(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
+    BvhNode::new(&objects, start_time, end_time).unwrap()
+    // WorldObjects::new(objects)
 }
 
 fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {

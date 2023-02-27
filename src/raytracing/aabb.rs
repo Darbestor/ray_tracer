@@ -1,11 +1,17 @@
 use std::mem::swap;
 
+use thiserror::Error;
+
 use crate::math::vec3::Vec3;
 
 use super::ray::Ray;
 
+#[derive(Error, Debug)]
+#[error("Bounding box is not supported for the type")]
+pub struct BoundingBoxError;
+
 pub trait BoundingBox {
-    fn bounding_box(&self, start_time: f32, end_time: f32) -> Option<AABB>;
+    fn bounding_box(&self, start_time: f32, end_time: f32) -> Result<AABB, BoundingBoxError>;
 
     fn surrounding_box(box1: &AABB, box2: &AABB) -> AABB
     where
@@ -29,6 +35,7 @@ pub trait BoundingBox {
     }
 }
 
+#[derive(Clone, Copy)]
 pub struct AABB {
     pub minimum: Vec3,
     pub maximum: Vec3,

@@ -3,24 +3,27 @@ use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, Parall
 
 use crate::{math::vec3::Vec3, utils::progress_watcher::ProgressObserver};
 
-use super::{
-    camera::Camera, material::MaterialScatter, ray::Ray, ray_hit::RayHitTester, world::WorldObjects,
-};
+use super::{camera::Camera, hittable::Hittable, material::MaterialScatter, ray::Ray};
 
 pub struct Renderer {
     pub camera: Camera,
     pub samples_per_pixel: usize,
     pub max_ray_bounces: usize,
-    pub objects: WorldObjects,
+    pub objects: Box<dyn Hittable + Send + Sync>,
 }
 
 impl Renderer {
-    pub fn init(camera: Camera, samples_per_pixel: usize, max_ray_bounces: usize) -> Self {
+    pub fn init(
+        camera: Camera,
+        samples_per_pixel: usize,
+        max_ray_bounces: usize,
+        objects: Box<dyn Hittable + Send + Sync>,
+    ) -> Self {
         Self {
             camera,
             samples_per_pixel,
             max_ray_bounces,
-            objects: WorldObjects { objects: vec![] },
+            objects,
         }
     }
 
