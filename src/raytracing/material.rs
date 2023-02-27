@@ -1,9 +1,11 @@
+use std::sync::Arc;
+
 use rand::{thread_rng, Rng};
 
 /// TODO: Think about different design structure
 use crate::math::{random_in_unit_sphere, vec3::Vec3};
 
-use super::{ray::Ray, ray_hit::HitResult};
+use super::{ray::Ray, ray_hit::HitResult, texture::Texture};
 
 pub enum Material {
     Labmertian(MatLabmertian),
@@ -12,7 +14,7 @@ pub enum Material {
 }
 
 pub struct MatLabmertian {
-    pub albedo: Vec3,
+    pub albedo: Arc<dyn Texture + Send + Sync>,
 }
 
 pub struct MatMetalic {
@@ -53,7 +55,7 @@ impl MaterialScatter for MatLabmertian {
             in_ray.time,
         );
         Some(ScatterResult {
-            attenuation: self.albedo,
+            attenuation: self.albedo.value(&hit_result.uv, &hit_result.location),
             ray: scattered,
         })
     }

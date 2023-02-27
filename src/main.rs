@@ -7,6 +7,9 @@ use rust_ray_tracer::raytracing::bvh::BvhNode;
 use rust_ray_tracer::raytracing::hittable::Hittable;
 use rust_ray_tracer::raytracing::moving_sphere::MovingSphere;
 use rust_ray_tracer::raytracing::renderer::Renderer;
+use rust_ray_tracer::raytracing::texture::checker::Checker;
+use rust_ray_tracer::raytracing::texture::solid_color::SolidColor;
+use rust_ray_tracer::raytracing::world::WorldObjects;
 use rust_ray_tracer::{
     math::vec3::Vec3,
     ppm::{color::Color, image::PpmImage},
@@ -56,17 +59,17 @@ fn main() {
 
     let scene = renderer.render(width, height, true);
 
-    save_to_ppm("bvh.ppm", width, height, scene);
+    save_to_ppm("textures.ppm", width, height, scene);
 }
 
 #[allow(dead_code)]
 fn test_scene(start_time: f32, end_time: f32) -> BvhNode {
     //Materials
     let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.8, 0.8, 0.0),
+        albedo: Arc::new(SolidColor::new(0.8, 0.8, 0.0)),
     }));
     let material_center = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.7, 0.3, 0.3),
+        albedo: Arc::new(SolidColor::new(0.7, 0.3, 0.3)),
     }));
     let material_left = Arc::new(Material::Dielectric(MatDielectric {
         refraction_index: 1.7,
@@ -91,11 +94,14 @@ fn test_scene(start_time: f32, end_time: f32) -> BvhNode {
 }
 
 #[allow(dead_code)]
-fn random_scene(start_time: f32, end_time: f32) -> BvhNode {
+fn random_scene(start_time: f32, end_time: f32) -> WorldObjects {
     let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![];
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.5, 0.5, 0.5),
+        albedo: Arc::new(Checker::new(
+            Arc::new(SolidColor::new(0.2, 0.3, 0.1)),
+            Arc::new(SolidColor::new(0.9, 0.9, 0.9)),
+        )),
     }));
     objects.push(Arc::new(Sphere::new(
         Vec3::new(0., -1000., 0.),
@@ -116,7 +122,9 @@ fn random_scene(start_time: f32, end_time: f32) -> BvhNode {
                 if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
-                    let sphere_material = Arc::new(Material::Labmertian(MatLabmertian { albedo }));
+                    let sphere_material = Arc::new(Material::Labmertian(MatLabmertian {
+                        albedo: Arc::new(SolidColor::from(albedo)),
+                    }));
                     let center2 = center + Vec3::new(0., rng.gen_range(0.0..0.5), 0.);
                     objects.push(Arc::new(MovingSphere::new(
                         center,
@@ -150,7 +158,7 @@ fn random_scene(start_time: f32, end_time: f32) -> BvhNode {
     objects.push(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.4, 0.2, 0.1),
+        albedo: Arc::new(SolidColor::new(0.4, 0.2, 0.1)),
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
 
@@ -159,8 +167,8 @@ fn random_scene(start_time: f32, end_time: f32) -> BvhNode {
         roughness: 0.0,
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
-    BvhNode::new(&objects, start_time, end_time).unwrap()
-    // WorldObjects::new(objects)
+    // BvhNode::new(&objects, start_time, end_time).unwrap()
+    WorldObjects::new(objects)
 }
 
 fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {

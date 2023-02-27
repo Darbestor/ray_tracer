@@ -1,3 +1,4 @@
+pub mod checker;
 pub mod solid_color;
 
 use crate::math::vec3::Vec3;
@@ -5,14 +6,16 @@ use crate::math::vec3::Vec3;
 pub trait Texture {
     /// Get texture value by given coordinates
     ///
-    /// `u` - texture 'x' coord
-    /// `v` - texture 'y' coord
+    /// `UvCoords` - texture coordinates on surfacee
     /// `point` - point on shape
-    fn value(&self, u: f32, v: f32, point: &Vec3) -> Vec3;
+    fn value(&self, uv_coords: &UvCoords, point: &Vec3) -> Vec3;
 }
 
+/// Texture coordinates
 pub struct UvCoords {
+    // `x` axis coord
     pub u: f32,
+    // `y` axis coord
     pub v: f32,
 }
 
