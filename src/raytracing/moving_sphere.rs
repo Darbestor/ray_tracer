@@ -1,4 +1,4 @@
-use std::sync::Arc;
+use std::{f32::consts::PI, sync::Arc};
 
 use crate::math::vec3::Vec3;
 
@@ -8,6 +8,7 @@ use super::{
     material::Material,
     ray::Ray,
     ray_hit::{HitResult, Normal, RayHitTester},
+    texture::{UvCoords, UvMapper},
 };
 
 pub struct MovingSphere {
@@ -116,5 +117,23 @@ impl BoundingBox for MovingSphere {
         Ok(<MovingSphere as BoundingBox>::surrounding_box(
             &box_start, &box_end,
         ))
+    }
+}
+
+impl UvMapper for MovingSphere {
+    fn get_uv_coords(&self, normal: &Vec3) -> super::texture::UvCoords {
+        // normal: a given normal on the sphere of radius one, centered at the origin.
+        // u: returned value [0,1] of angle around the Y axis from X=-1.
+        // v: returned value [0,1] of angle from Y=-1 to Y=+1.
+        //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>
+        //     <0 1 0> yields <0.50 1.00>       < 0 -1  0> yields <0.50 0.00>
+        //     <0 0 1> yields <0.25 0.50>       < 0  0 -1> yields <0.75 0.50>
+
+        let theta = f32::acos(-normal.y());
+        let phi = f32::atan2(-normal.z(), normal.x()) + PI;
+        UvCoords {
+            u: phi / (2. * PI),
+            v: theta / PI,
+        }
     }
 }
