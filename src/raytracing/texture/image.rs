@@ -16,10 +16,7 @@ pub struct ImageTexture {
 
 impl ImageTexture {
     pub fn new<P: AsRef<Path>>(filepath: P) -> Result<Self, io::Error> {
-        let file = File::open(filepath)?;
-        let texture = image::load(BufReader::new(file), image::ImageFormat::Jpeg)
-            .unwrap()
-            .into_rgb8();
+        let texture = image::open(filepath).unwrap().into_rgb8();
         Ok(Self {
             image_buffer: texture,
         })
