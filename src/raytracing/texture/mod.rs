@@ -1,4 +1,5 @@
 pub mod checker;
+pub mod image;
 pub mod solid_color;
 
 use crate::math::vec3::Vec3;

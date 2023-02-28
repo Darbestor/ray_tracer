@@ -7,8 +7,9 @@ use rust_ray_tracer::raytracing::bvh::BvhNode;
 use rust_ray_tracer::raytracing::hittable::Hittable;
 use rust_ray_tracer::raytracing::moving_sphere::MovingSphere;
 use rust_ray_tracer::raytracing::renderer::Renderer;
-use rust_ray_tracer::raytracing::texture::checker::Checker;
-use rust_ray_tracer::raytracing::texture::solid_color::SolidColor;
+use rust_ray_tracer::raytracing::texture::checker::CheckerTexture;
+use rust_ray_tracer::raytracing::texture::image::ImageTexture;
+use rust_ray_tracer::raytracing::texture::solid_color::SolidColorTexture;
 use rust_ray_tracer::raytracing::world::WorldObjects;
 use rust_ray_tracer::{
     math::vec3::Vec3,
@@ -54,22 +55,22 @@ fn main() {
         camera,
         samples_per_pixel,
         max_ray_bounces,
-        Box::new(random_scene(start_time, end_time)),
+        Box::new(earth()),
     );
 
     let scene = renderer.render(width, height, true);
 
-    save_to_ppm("textures.ppm", width, height, scene);
+    save_to_ppm("image_texture.ppm", width, height, scene);
 }
 
 #[allow(dead_code)]
 fn test_scene(start_time: f32, end_time: f32) -> BvhNode {
     //Materials
     let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColor::new(0.8, 0.8, 0.0)),
+        albedo: Arc::new(SolidColorTexture::new(0.8, 0.8, 0.0)),
     }));
     let material_center = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColor::new(0.7, 0.3, 0.3)),
+        albedo: Arc::new(SolidColorTexture::new(0.7, 0.3, 0.3)),
     }));
     let material_left = Arc::new(Material::Dielectric(MatDielectric {
         refraction_index: 1.7,
@@ -98,9 +99,9 @@ fn random_scene(start_time: f32, end_time: f32) -> WorldObjects {
     let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![];
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(Checker::new(
-            Arc::new(SolidColor::new(0.2, 0.3, 0.1)),
-            Arc::new(SolidColor::new(0.9, 0.9, 0.9)),
+        albedo: Arc::new(CheckerTexture::new(
+            Arc::new(SolidColorTexture::new(0.2, 0.3, 0.1)),
+            Arc::new(SolidColorTexture::new(0.9, 0.9, 0.9)),
         )),
     }));
     objects.push(Arc::new(Sphere::new(
@@ -123,7 +124,7 @@ fn random_scene(start_time: f32, end_time: f32) -> WorldObjects {
                     // diffuse
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
                     let sphere_material = Arc::new(Material::Labmertian(MatLabmertian {
-                        albedo: Arc::new(SolidColor::from(albedo)),
+                        albedo: Arc::new(SolidColorTexture::from(albedo)),
                     }));
                     let center2 = center + Vec3::new(0., rng.gen_range(0.0..0.5), 0.);
                     objects.push(Arc::new(MovingSphere::new(
@@ -158,7 +159,7 @@ fn random_scene(start_time: f32, end_time: f32) -> WorldObjects {
     objects.push(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColor::new(0.4, 0.2, 0.1)),
+        albedo: Arc::new(SolidColorTexture::new(0.4, 0.2, 0.1)),
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
 
@@ -169,6 +170,18 @@ fn random_scene(start_time: f32, end_time: f32) -> WorldObjects {
     objects.push(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
     // BvhNode::new(&objects, start_time, end_time).unwrap()
     WorldObjects::new(objects)
+}
+
+fn earth() -> WorldObjects {
+    let mut path = std::env::current_dir().unwrap();
+    path.push("images");
+    path.push("earthmap.jpg");
+    let earth_texture = Arc::new(ImageTexture::new(path).unwrap());
+    let earth_surface = Arc::new(Material::Labmertian(MatLabmertian {
+        albedo: earth_texture,
+    }));
+    let globe = Arc::new(Sphere::new(Vec3::new(0., 0., 0.), 2.0, earth_surface));
+    WorldObjects::new(vec![globe])
 }
 
 fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {

@@ -2,11 +2,11 @@ use crate::math::vec3::Vec3;
 
 use super::{Texture, UvCoords};
 
-pub struct SolidColor {
+pub struct SolidColorTexture {
     pub color: Vec3,
 }
 
-impl SolidColor {
+impl SolidColorTexture {
     pub fn new(red: f32, green: f32, blue: f32) -> Self {
         Self {
             color: Vec3::new(red, green, blue),
@@ -14,13 +14,13 @@ impl SolidColor {
     }
 }
 
-impl Texture for SolidColor {
+impl Texture for SolidColorTexture {
     fn value(&self, _: &UvCoords, _: &Vec3) -> Vec3 {
         self.color
     }
 }
 
-impl From<Vec3> for SolidColor {
+impl From<Vec3> for SolidColorTexture {
     fn from(value: Vec3) -> Self {
         Self { color: value }
     }

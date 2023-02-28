@@ -1,14 +1,14 @@
 use std::sync::Arc;
 
-use super::{solid_color::SolidColor, Texture};
+use super::{solid_color::SolidColorTexture, Texture};
 
-pub struct Checker {
-    pub odd: Arc<SolidColor>,
-    pub even: Arc<SolidColor>,
+pub struct CheckerTexture {
+    pub odd: Arc<SolidColorTexture>,
+    pub even: Arc<SolidColorTexture>,
 }
 
-impl Checker {
-    pub fn new(odd_color: Arc<SolidColor>, even_color: Arc<SolidColor>) -> Self {
+impl CheckerTexture {
+    pub fn new(odd_color: Arc<SolidColorTexture>, even_color: Arc<SolidColorTexture>) -> Self {
         Self {
             odd: odd_color,
             even: even_color,
@@ -16,7 +16,7 @@ impl Checker {
     }
 }
 
-impl Texture for Checker {
+impl Texture for CheckerTexture {
     fn value(
         &self,
         uv_coords: &super::UvCoords,
