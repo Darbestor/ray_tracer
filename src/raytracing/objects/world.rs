@@ -1,31 +1,28 @@
 use std::sync::Arc;
 
-use super::{
-    aabb::{BoundingBox, BoundingBoxError},
-    hittable::Hittable,
+use crate::raytracing::{
+    aabb::{BoundingBox, BoundingBoxError, AABB},
+    ray::Ray,
     ray_hit::{HitResult, RayHitTester},
 };
 
+use super::HittableObject;
+
 #[derive(Default)]
 pub struct WorldObjects {
-    pub objects: Vec<Arc<dyn Hittable + Send + Sync>>,
+    pub objects: Vec<Arc<dyn HittableObject + Send + Sync>>,
 }
 
 impl WorldObjects {
-    pub fn new(objects: Vec<Arc<dyn Hittable + Send + Sync>>) -> Self {
+    pub fn new(objects: Vec<Arc<dyn HittableObject + Send + Sync>>) -> Self {
         Self { objects }
     }
 }
 
-impl Hittable for WorldObjects {}
+impl HittableObject for WorldObjects {}
 
 impl RayHitTester for WorldObjects {
-    fn hit(
-        &self,
-        ray: &super::ray::Ray,
-        min_distance: f32,
-        max_distance: f32,
-    ) -> Option<HitResult> {
+    fn hit(&self, ray: &Ray, min_distance: f32, max_distance: f32) -> Option<HitResult> {
         let mut closest = max_distance;
         let mut temp_hit_result = None;
 
@@ -40,11 +37,7 @@ impl RayHitTester for WorldObjects {
 }
 
 impl BoundingBox for WorldObjects {
-    fn bounding_box(
-        &self,
-        start_time: f32,
-        end_time: f32,
-    ) -> Result<super::aabb::AABB, BoundingBoxError> {
+    fn bounding_box(&self, start_time: f32, end_time: f32) -> Result<AABB, BoundingBoxError> {
         if self.objects.is_empty() {
             return Err(BoundingBoxError);
         }

@@ -1,35 +1,56 @@
 use std::{f32::consts::PI, sync::Arc};
 
-use crate::math::vec3::Vec3;
-
-use super::{
-    aabb::{BoundingBox, BoundingBoxError, AABB},
-    hittable::Hittable,
-    material::Material,
-    ray::Ray,
-    ray_hit::{HitResult, Normal, RayHitTester},
-    texture::{UvCoords, UvMapper},
+use crate::{
+    math::vec3::Vec3,
+    raytracing::{
+        aabb::{BoundingBox, BoundingBoxError, AABB},
+        material::Material,
+        ray::Ray,
+        ray_hit::{HitResult, Normal, RayHitTester},
+        texture::{UvCoords, UvMapper},
+    },
 };
 
-pub struct Sphere {
-    pub center: Vec3,
+use super::HittableObject;
+
+pub struct MovingSphere {
+    pub center_start: Vec3,
+    pub center_end: Vec3,
+    pub time_start: f32,
+    pub time_end: f32,
     pub radius: f32,
     pub material: Arc<Material>,
 }
 
-impl Sphere {
-    pub fn new(center: Vec3, radius: f32, material: Arc<Material>) -> Self {
+impl MovingSphere {
+    pub fn new(
+        center_start: Vec3,
+        center_end: Vec3,
+        time_start: f32,
+        time_end: f32,
+        radius: f32,
+        material: Arc<Material>,
+    ) -> Self {
         Self {
-            center,
+            center_start,
+            center_end,
+            time_start,
+            time_end,
             radius,
             material,
         }
     }
+
+    pub fn center(&self, time: f32) -> Vec3 {
+        self.center_start
+            + ((time - self.time_start) / (self.time_end - self.time_start))
+                * (self.center_end - self.center_start)
+    }
 }
 
-impl Hittable for Sphere {}
+impl HittableObject for MovingSphere {}
 
-impl RayHitTester for Sphere {
+impl RayHitTester for MovingSphere {
     /** [`Ray`] hit test for sphere
 
     ## Returns
@@ -51,7 +72,7 @@ impl RayHitTester for Sphere {
     `C` - [Sphere](Sphere) center
     */
     fn hit(&self, ray: &Ray, min_distance: f32, max_distance: f32) -> Option<HitResult> {
-        let oc = ray.origin - self.center;
+        let oc = ray.origin - self.center(ray.time);
         let a = ray.direction.length_squared();
         let half_b = oc.dot(&ray.direction);
         let c = oc.length_squared() - self.radius * self.radius;
@@ -75,24 +96,31 @@ impl RayHitTester for Sphere {
     }
 }
 
-impl Normal for Sphere {
-    fn get_normal(&self, location: &Vec3, _: &Ray) -> Vec3 {
-        &(location - &self.center) / self.radius
+impl Normal for MovingSphere {
+    fn get_normal(&self, location: &Vec3, ray: &Ray) -> Vec3 {
+        &(location - &self.center(ray.time)) / self.radius
     }
 }
 
-impl BoundingBox for Sphere {
-    fn bounding_box(&self, _: f32, _: f32) -> Result<super::aabb::AABB, BoundingBoxError> {
-        Ok(AABB::new(
-            self.center - Vec3::new(self.radius, self.radius, self.radius),
-            self.center + Vec3::new(self.radius, self.radius, self.radius),
+impl BoundingBox for MovingSphere {
+    fn bounding_box(&self, start_time: f32, end_time: f32) -> Result<AABB, BoundingBoxError> {
+        let box_start = AABB::new(
+            self.center(start_time) - Vec3::new(self.radius, self.radius, self.radius),
+            self.center(start_time) + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        let box_end = AABB::new(
+            self.center(end_time) - Vec3::new(self.radius, self.radius, self.radius),
+            self.center(end_time) + Vec3::new(self.radius, self.radius, self.radius),
+        );
+        Ok(<MovingSphere as BoundingBox>::surrounding_box(
+            &box_start, &box_end,
         ))
     }
 }
 
-impl UvMapper for Sphere {
-    fn get_uv_coords(&self, normal: &Vec3) -> super::texture::UvCoords {
-        // normal: a given point on the sphere of radius one, centered at the origin.
+impl UvMapper for MovingSphere {
+    fn get_uv_coords(&self, normal: &Vec3) -> UvCoords {
+        // normal: a given normal on the sphere of radius one, centered at the origin.
         // u: returned value [0,1] of angle around the Y axis from X=-1.
         // v: returned value [0,1] of angle from Y=-1 to Y=+1.
         //     <1 0 0> yields <0.50 0.50>       <-1  0  0> yields <0.00 0.50>

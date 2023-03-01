@@ -3,13 +3,13 @@ use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, Parall
 
 use crate::{math::vec3::Vec3, utils::progress_watcher::ProgressObserver};
 
-use super::{camera::Camera, hittable::Hittable, material::MaterialScatter, ray::Ray};
+use super::{camera::Camera, material::MaterialScatter, objects::HittableObject, ray::Ray};
 
 pub struct Renderer {
     pub camera: Camera,
     pub samples_per_pixel: usize,
     pub max_ray_bounces: usize,
-    pub objects: Box<dyn Hittable + Send + Sync>,
+    pub objects: Box<dyn HittableObject + Send + Sync>,
 }
 
 impl Renderer {
@@ -17,7 +17,7 @@ impl Renderer {
         camera: Camera,
         samples_per_pixel: usize,
         max_ray_bounces: usize,
-        objects: Box<dyn Hittable + Send + Sync>,
+        objects: Box<dyn HittableObject + Send + Sync>,
     ) -> Self {
         Self {
             camera,

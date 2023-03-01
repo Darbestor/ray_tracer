@@ -5,15 +5,10 @@ use rust_ray_tracer::{
     math::vec3::Vec3,
     raytracing::{
         camera::Camera,
-        hittable::Hittable,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
-        moving_sphere::MovingSphere,
+        objects::{HittableObject, MovingSphere, Sphere, WorldObjects},
         renderer::Renderer,
-        sphere::Sphere,
-        texture::{
-            checker::CheckerTexture, image::ImageTexture, solid_color::SolidColorTexture, Texture,
-        },
-        world::WorldObjects,
+        texture::{CheckerTexture, ImageTexture, SolidColorTexture, Texture},
     },
 };
 
@@ -96,7 +91,7 @@ pub fn test_scene(settings: &GlobalSettings) -> Renderer {
     )));
 
     // Objects
-    let objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![
+    let objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![
         Arc::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
         Arc::new(Sphere::new(
             Vec3::new(0., -100.5, -1.),
@@ -138,7 +133,7 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
     );
 
     // ------ World ------------
-    let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![];
+    let mut objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![];
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
         albedo: Arc::new(Texture::Checker(CheckerTexture::new(

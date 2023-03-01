@@ -1,12 +1,8 @@
 pub mod aabb;
-pub mod bvh;
 pub mod camera;
-pub mod hittable;
 pub mod material;
-pub mod moving_sphere;
+pub mod objects;
 pub mod ray;
 pub mod ray_hit;
 pub mod renderer;
-pub mod sphere;
 pub mod texture;
-pub mod world;

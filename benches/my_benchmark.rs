@@ -6,12 +6,10 @@ use rust_ray_tracer::{
     math::vec3::Vec3,
     raytracing::{
         camera::Camera,
-        hittable::Hittable,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
+        objects::{HittableObject, Sphere, WorldObjects},
         renderer::Renderer,
-        sphere::Sphere,
-        texture::{solid_color::SolidColorTexture, Texture},
-        world::WorldObjects,
+        texture::{SolidColorTexture, Texture},
     },
 };
 
@@ -22,7 +20,7 @@ static SAMPLES_PER_PIXEL: usize = 100;
 static MAX_RAY_BOUNCES: usize = 50;
 
 fn scene() -> WorldObjects {
-    let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = Vec::new();
+    let mut objects: Vec<Arc<dyn HittableObject + Send + Sync>> = Vec::new();
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
         albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.5, 0.5, 0.5))),

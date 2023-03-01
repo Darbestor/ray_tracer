@@ -4,7 +4,7 @@ pub mod solid_color;
 
 use crate::math::vec3::Vec3;
 
-use self::{checker::CheckerTexture, image::ImageTexture, solid_color::SolidColorTexture};
+pub use self::{checker::CheckerTexture, image::ImageTexture, solid_color::SolidColorTexture};
 
 pub enum Texture {
     SolidColor(SolidColorTexture),
