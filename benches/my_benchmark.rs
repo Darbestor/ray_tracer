@@ -6,9 +6,11 @@ use rust_ray_tracer::{
     math::vec3::Vec3,
     raytracing::{
         camera::Camera,
+        hittable::Hittable,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
         renderer::Renderer,
         sphere::Sphere,
+        texture::solid_color::SolidColorTexture,
         world::WorldObjects,
     },
 };
@@ -20,12 +22,12 @@ static SAMPLES_PER_PIXEL: usize = 100;
 static MAX_RAY_BOUNCES: usize = 50;
 
 fn scene() -> WorldObjects {
-    let mut world = WorldObjects::new();
+    let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = Vec::new();
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.5, 0.5, 0.5),
+        albedo: Arc::new(SolidColorTexture::new(0.5, 0.5, 0.5)),
     }));
-    world.objects.push(Box::new(Sphere::new(
+    objects.push(Arc::new(Sphere::new(
         Vec3::new(0., -1000., 0.),
         1000.,
         ground_material,
@@ -44,7 +46,9 @@ fn scene() -> WorldObjects {
                 let sphere_material = if choose_mat < 0.8 {
                     // diffuse
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
-                    Arc::new(Material::Labmertian(MatLabmertian { albedo }))
+                    Arc::new(Material::Labmertian(MatLabmertian {
+                        albedo: Arc::new(SolidColorTexture::from(albedo)),
+                    }))
                 } else if choose_mat < 0.95 {
                     // metal
                     let albedo = Vec3::random(0.5, 1.);
@@ -56,9 +60,7 @@ fn scene() -> WorldObjects {
                         refraction_index: 1.5,
                     }))
                 };
-                world
-                    .objects
-                    .push(Box::new(Sphere::new(center, 0.2, sphere_material)));
+                objects.push(Arc::new(Sphere::new(center, 0.2, sphere_material)));
             }
         }
     }
@@ -66,25 +68,19 @@ fn scene() -> WorldObjects {
     let material = Arc::new(Material::Dielectric(MatDielectric {
         refraction_index: 1.5,
     }));
-    world
-        .objects
-        .push(Box::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
+    objects.push(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Vec3::new(0.4, 0.2, 0.1),
+        albedo: Arc::new(SolidColorTexture::from(Vec3::new(0.4, 0.2, 0.1))),
     }));
-    world
-        .objects
-        .push(Box::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
+    objects.push(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Metalic(MatMetalic {
         albedo: Vec3::new(0.7, 0.6, 0.5),
         roughness: 0.0,
     }));
-    world
-        .objects
-        .push(Box::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
-    world
+    objects.push(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
+    WorldObjects::new(objects)
 }
 
 fn setup_render() -> Renderer {
@@ -104,9 +100,16 @@ fn setup_render() -> Renderer {
         ASPECT_RATIO,
         aperture,
         dist_to_focus,
+        0.0,
+        1.0,
     );
 
-    Renderer::init(camera, SAMPLES_PER_PIXEL, MAX_RAY_BOUNCES)
+    Renderer::init(
+        camera,
+        SAMPLES_PER_PIXEL,
+        MAX_RAY_BOUNCES,
+        Box::new(scene()),
+    )
 }
 
 fn criterion_benchmark(c: &mut Criterion) {
@@ -120,7 +123,7 @@ fn criterion_benchmark(c: &mut Criterion) {
         b.iter_batched(
             scene,
             |scene| {
-                renderer.objects = scene;
+                renderer.objects = Box::new(scene);
                 renderer.render(WIDTH, HEIGHT, false)
             },
             criterion::BatchSize::PerIteration,
