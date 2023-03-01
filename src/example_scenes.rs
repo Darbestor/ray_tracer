@@ -6,7 +6,7 @@ use rust_ray_tracer::{
     raytracing::{
         camera::Camera,
         material::{MatDielectric, MatDiffuseLight, MatLabmertian, MatMetalic, Material},
-        objects::{HittableObject, MovingSphere, Plane, Sphere, WorldObjects},
+        objects::{HittableObject, MovingSphere, PlaneX, PlaneY, PlaneZ, Sphere, WorldObjects},
         renderer::Renderer,
         texture::{CheckerTexture, ImageTexture, SolidColorTexture, Texture},
     },
@@ -264,8 +264,77 @@ pub fn lighting_scene(settings: &GlobalSettings) -> Renderer {
             material_ground,
         )),
         Arc::new(Sphere::new(Vec3::new(0., 2., 0.), 2.0, material_center)),
-        Arc::new(Plane::new(0., 1., -3., 4., 4., light)),
+        Arc::new(PlaneZ::new(0., 1., -3., 4., 4., light.clone())),
+        Arc::new(PlaneZ::new(0., 1., 3., 4., 4., light)),
     ];
+    let world = WorldObjects::new(objects);
+    // ---------
+    Renderer::init(
+        camera,
+        settings.samples_per_pixel,
+        settings.max_ray_bounces,
+        Box::new(world),
+    )
+}
+
+pub fn cornell_box(settings: &mut GlobalSettings) -> Renderer {
+    settings.width = 600;
+    settings.aspect_ratio = 1.0;
+    settings.height = 600;
+    settings.samples_per_pixel = 200;
+
+    // Camera
+    let lookfrom = Vec3::new(278., 278., -800.);
+    let lookat = Vec3::new(278., 278., 0.);
+    let rotation = Vec3::new(0., 1., 0.);
+    let vfov = 40.0;
+    let dist_to_focus = 10.;
+    let aperture = 0.1;
+
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        rotation,
+        vfov,
+        settings.aspect_ratio,
+        aperture,
+        dist_to_focus,
+        settings.animation_start_time,
+        settings.animation_end_time,
+    );
+
+    // --------World---------
+    //Materials
+    let red = Arc::new(Material::Labmertian(MatLabmertian {
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(
+            0.65, 0.05, 0.05,
+        ))),
+    }));
+    let green = Arc::new(Material::Labmertian(MatLabmertian {
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(
+            0.12, 0.45, 0.15,
+        ))),
+    }));
+    let white = Arc::new(Material::Labmertian(MatLabmertian {
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(
+            0.73, 0.73, 0.73,
+        ))),
+    }));
+
+    let light = Arc::new(Material::DiffuseLight(MatDiffuseLight {
+        emit: Arc::new(Texture::SolidColor(SolidColorTexture::new(15., 15., 15.))),
+    }));
+
+    // Objects
+    let objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![
+        Arc::new(PlaneX::new(555., 0., 0., 555., 555., green)),
+        Arc::new(PlaneX::new(0., 0., 0., 555., 555., red)),
+        Arc::new(PlaneY::new(213., 554., 227., 130., 105., light)),
+        Arc::new(PlaneY::new(0., 0., 0., 555., 555., white.clone())),
+        Arc::new(PlaneY::new(0., 555., 0., 555., 555., white.clone())),
+        Arc::new(PlaneZ::new(0., 0., 555., 555., 555., white)),
+    ];
+
     let world = WorldObjects::new(objects);
     // ---------
     Renderer::init(

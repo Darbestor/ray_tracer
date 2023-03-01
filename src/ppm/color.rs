@@ -41,16 +41,13 @@ impl TryFrom<Vec3> for Color {
         if !value.x().is_sign_positive()
             || !value.y().is_sign_positive()
             || !value.z().is_sign_positive()
-            || value.x() > 1.0
-            || value.y() > 1.0
-            || value.z() > 1.0
         {
             return Err(OutOfBoundsError(format!("{:?}", value)));
         }
 
-        let ir = (255.999 * value.x()) as u8;
-        let ig = (255.999 * value.y()) as u8;
-        let ib = (255.999 * value.z()) as u8;
+        let ir = (255.999 * f32::clamp(value.x(), 0., 1.)) as u8;
+        let ig = (255.999 * f32::clamp(value.y(), 0., 1.)) as u8;
+        let ib = (255.999 * f32::clamp(value.z(), 0., 1.)) as u8;
         Ok(Self {
             red: ir,
             green: ig,

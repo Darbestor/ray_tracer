@@ -19,7 +19,7 @@ fn main() {
     // Constants
     let aspect_ratio = 16.0 / 9.0;
     let width = 400;
-    let settings = GlobalSettings {
+    let mut settings = GlobalSettings {
         aspect_ratio,
         width,
         height: (width as f32 / aspect_ratio) as usize,
@@ -34,12 +34,13 @@ fn main() {
         "2" => example_scenes::random_scene(&settings),
         "3" => example_scenes::earth_scene(&settings),
         "4" => example_scenes::lighting_scene(&settings),
+        "5" => example_scenes::cornell_box(&mut settings),
         _ => panic!("Unknown scene number"),
     };
 
     let scene = renderer.render(settings.width, settings.height, true);
 
-    save_to_ppm("lighting.ppm", settings.width, settings.height, scene);
+    save_to_ppm("box.ppm", settings.width, settings.height, scene);
 }
 
 fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {

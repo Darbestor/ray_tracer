@@ -8,7 +8,9 @@ pub mod world;
 
 pub use bvh::BvhNode;
 pub use moving_sphere::MovingSphere;
-pub use plane::Plane;
+pub use plane::PlaneX;
+pub use plane::PlaneY;
+pub use plane::PlaneZ;
 pub use sphere::Sphere;
 pub use world::WorldObjects;
 
