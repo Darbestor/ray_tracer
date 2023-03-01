@@ -5,7 +5,11 @@ use rand::{thread_rng, Rng};
 /// TODO: Think about different design structure
 use crate::math::{random_in_unit_sphere, vec3::Vec3};
 
-use super::{ray::Ray, ray_hit::HitResult, texture::Texture};
+use super::{
+    ray::Ray,
+    ray_hit::HitResult,
+    texture::{Texture, TextureFunc},
+};
 
 pub enum Material {
     Labmertian(MatLabmertian),
@@ -14,7 +18,7 @@ pub enum Material {
 }
 
 pub struct MatLabmertian {
-    pub albedo: Arc<dyn Texture + Send + Sync>,
+    pub albedo: Arc<Texture>,
 }
 
 pub struct MatMetalic {

@@ -7,7 +7,7 @@ use image::RgbImage;
 
 use crate::math::vec3::Vec3;
 
-use super::Texture;
+use super::TextureFunc;
 
 pub struct ImageTexture {
     image_buffer: RgbImage,
@@ -22,7 +22,7 @@ impl ImageTexture {
     }
 }
 
-impl Texture for ImageTexture {
+impl TextureFunc for ImageTexture {
     fn value(
         &self,
         uv_coords: &super::UvCoords,

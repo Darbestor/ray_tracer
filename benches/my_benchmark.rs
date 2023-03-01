@@ -10,7 +10,7 @@ use rust_ray_tracer::{
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
         renderer::Renderer,
         sphere::Sphere,
-        texture::solid_color::SolidColorTexture,
+        texture::{solid_color::SolidColorTexture, Texture},
         world::WorldObjects,
     },
 };
@@ -25,7 +25,7 @@ fn scene() -> WorldObjects {
     let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = Vec::new();
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColorTexture::new(0.5, 0.5, 0.5)),
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.5, 0.5, 0.5))),
     }));
     objects.push(Arc::new(Sphere::new(
         Vec3::new(0., -1000., 0.),
@@ -47,7 +47,7 @@ fn scene() -> WorldObjects {
                     // diffuse
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
                     Arc::new(Material::Labmertian(MatLabmertian {
-                        albedo: Arc::new(SolidColorTexture::from(albedo)),
+                        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::from(albedo))),
                     }))
                 } else if choose_mat < 0.95 {
                     // metal
@@ -71,7 +71,9 @@ fn scene() -> WorldObjects {
     objects.push(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColorTexture::from(Vec3::new(0.4, 0.2, 0.1))),
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::from(Vec3::new(
+            0.4, 0.2, 0.1,
+        )))),
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
 

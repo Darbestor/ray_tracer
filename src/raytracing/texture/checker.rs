@@ -1,6 +1,6 @@
 use std::sync::Arc;
 
-use super::{solid_color::SolidColorTexture, Texture};
+use super::{solid_color::SolidColorTexture, TextureFunc};
 
 pub struct CheckerTexture {
     pub odd: Arc<SolidColorTexture>,
@@ -16,7 +16,7 @@ impl CheckerTexture {
     }
 }
 
-impl Texture for CheckerTexture {
+impl TextureFunc for CheckerTexture {
     fn value(
         &self,
         uv_coords: &super::UvCoords,

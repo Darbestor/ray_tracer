@@ -10,7 +10,9 @@ use rust_ray_tracer::{
         moving_sphere::MovingSphere,
         renderer::Renderer,
         sphere::Sphere,
-        texture::{checker::CheckerTexture, image::ImageTexture, solid_color::SolidColorTexture},
+        texture::{
+            checker::CheckerTexture, image::ImageTexture, solid_color::SolidColorTexture, Texture,
+        },
         world::WorldObjects,
     },
 };
@@ -41,7 +43,7 @@ pub fn earth_scene(settings: &GlobalSettings) -> Renderer {
     let mut path = std::env::current_dir().unwrap();
     path.push("images");
     path.push("earthmap.jpg");
-    let earth_texture = Arc::new(ImageTexture::new(path).unwrap());
+    let earth_texture = Arc::new(Texture::Image(ImageTexture::new(path).unwrap()));
     let earth_surface = Arc::new(Material::Labmertian(MatLabmertian {
         albedo: earth_texture,
     }));
@@ -80,10 +82,10 @@ pub fn test_scene(settings: &GlobalSettings) -> Renderer {
     // --------World---------
     //Materials
     let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColorTexture::new(0.8, 0.8, 0.0)),
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.8, 0.8, 0.0))),
     }));
     let material_center = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColorTexture::new(0.7, 0.3, 0.3)),
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.7, 0.3, 0.3))),
     }));
     let material_left = Arc::new(Material::Dielectric(MatDielectric {
         refraction_index: 1.7,
@@ -139,10 +141,10 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
     let mut objects: Vec<Arc<dyn Hittable + Send + Sync>> = vec![];
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(CheckerTexture::new(
+        albedo: Arc::new(Texture::Checker(CheckerTexture::new(
             Arc::new(SolidColorTexture::new(0.2, 0.3, 0.1)),
             Arc::new(SolidColorTexture::new(0.9, 0.9, 0.9)),
-        )),
+        ))),
     }));
     objects.push(Arc::new(Sphere::new(
         Vec3::new(0., -1000., 0.),
@@ -164,7 +166,7 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
                     // diffuse
                     let albedo = Vec3::random(0., 1.) * Vec3::random(0., 1.);
                     let sphere_material = Arc::new(Material::Labmertian(MatLabmertian {
-                        albedo: Arc::new(SolidColorTexture::from(albedo)),
+                        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::from(albedo))),
                     }));
                     let center2 = center + Vec3::new(0., rng.gen_range(0.0..0.5), 0.);
                     objects.push(Arc::new(MovingSphere::new(
@@ -199,7 +201,7 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
     objects.push(Arc::new(Sphere::new(Vec3::new(0., 1., 0.), 1.0, material)));
 
     let material = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(SolidColorTexture::new(0.4, 0.2, 0.1)),
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.4, 0.2, 0.1))),
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(-4., 1., 0.), 1.0, material)));
 
