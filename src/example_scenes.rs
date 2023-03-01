@@ -6,7 +6,7 @@ use rust_ray_tracer::{
     raytracing::{
         camera::Camera,
         material::{MatDielectric, MatDiffuseLight, MatLabmertian, MatMetalic, Material},
-        objects::{HittableObject, MovingSphere, Sphere, WorldObjects},
+        objects::{HittableObject, MovingSphere, Plane, Sphere, WorldObjects},
         renderer::Renderer,
         texture::{CheckerTexture, ImageTexture, SolidColorTexture, Texture},
     },
@@ -225,8 +225,8 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
 
 pub fn lighting_scene(settings: &GlobalSettings) -> Renderer {
     // Camera
-    let lookfrom = Vec3::new(13., 2., 3.);
-    let lookat = Vec3::new(0., 0., 0.);
+    let lookfrom = Vec3::new(26., 3., 6.);
+    let lookat = Vec3::new(0., 2., 0.);
     let rotation = Vec3::new(0., 1., 0.);
     let vfov = 20.0;
     let dist_to_focus = 10.;
@@ -247,37 +247,31 @@ pub fn lighting_scene(settings: &GlobalSettings) -> Renderer {
     // --------World---------
     //Materials
     let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
-        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.8, 0.8, 0.0))),
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(1., 1., 1.))),
     }));
-    let material_center = Arc::new(Material::DiffuseLight(MatDiffuseLight {
-        emit: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.7, 0.3, 0.3))),
+    let material_center = Arc::new(Material::Labmertian(MatLabmertian {
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.5, 0.2, 0.7))),
     }));
-    let material_left = Arc::new(Material::Dielectric(MatDielectric {
-        refraction_index: 1.7,
+    let light = Arc::new(Material::DiffuseLight(MatDiffuseLight {
+        emit: Arc::new(Texture::SolidColor(SolidColorTexture::new(1., 1., 1.))),
     }));
-    let material_right = Arc::new(Material::Metalic(MatMetalic::new(
-        Vec3::new(0.8, 0.6, 0.2),
-        1.0,
-    )));
 
     // Objects
     let objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![
-        Arc::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
         Arc::new(Sphere::new(
-            Vec3::new(0., -100.5, -1.),
-            100.,
+            Vec3::new(0., -1000.0, 0.),
+            1000.0,
             material_ground,
         )),
-        Arc::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
-        Arc::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
+        Arc::new(Sphere::new(Vec3::new(0., 2., 0.), 2.0, material_center)),
+        Arc::new(Plane::new(0., 1., -3., 4., 4., light)),
     ];
     let world = WorldObjects::new(objects);
     // ---------
-    let mut render = Renderer::init(
+    Renderer::init(
         camera,
         settings.samples_per_pixel,
         settings.max_ray_bounces,
         Box::new(world),
-    );
-    render
+    )
 }
