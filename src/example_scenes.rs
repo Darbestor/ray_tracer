@@ -6,7 +6,9 @@ use rust_ray_tracer::{
     raytracing::{
         camera::Camera,
         material::{MatDielectric, MatDiffuseLight, MatLabmertian, MatMetalic, Material},
-        objects::{HittableObject, MovingSphere, PlaneX, PlaneY, PlaneZ, Sphere, WorldObjects},
+        objects::{
+            Cube, HittableList, HittableObject, MovingSphere, PlaneX, PlaneY, PlaneZ, Sphere,
+        },
         renderer::Renderer,
         texture::{CheckerTexture, ImageTexture, SolidColorTexture, Texture},
     },
@@ -43,7 +45,7 @@ pub fn earth_scene(settings: &GlobalSettings) -> Renderer {
         albedo: earth_texture,
     }));
     let globe = Arc::new(Sphere::new(Vec3::new(0., 0., 0.), 2.0, earth_surface));
-    let world = WorldObjects::new(vec![globe]);
+    let world = HittableList::new(vec![globe]);
 
     let mut render = Renderer::init(
         camera,
@@ -103,7 +105,7 @@ pub fn test_scene(settings: &GlobalSettings) -> Renderer {
         Arc::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
         Arc::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
     ];
-    let world = WorldObjects::new(objects);
+    let world = HittableList::new(objects);
     // ---------
     let mut render = Renderer::init(
         camera,
@@ -209,7 +211,7 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
         roughness: 0.0,
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
-    let world = WorldObjects::new(objects);
+    let world = HittableList::new(objects);
     // ------------------------
 
     let mut render = Renderer::init(
@@ -267,7 +269,7 @@ pub fn lighting_scene(settings: &GlobalSettings) -> Renderer {
         Arc::new(PlaneZ::new(0., 1., -3., 4., 4., light.clone())),
         Arc::new(PlaneZ::new(0., 1., 3., 4., 4., light)),
     ];
-    let world = WorldObjects::new(objects);
+    let world = HittableList::new(objects);
     // ---------
     Renderer::init(
         camera,
@@ -324,7 +326,8 @@ pub fn cornell_box(settings: &mut GlobalSettings) -> Renderer {
     let light = Arc::new(Material::DiffuseLight(MatDiffuseLight {
         emit: Arc::new(Texture::SolidColor(SolidColorTexture::new(15., 15., 15.))),
     }));
-
+    // objects.add(make_shared<box>(point3(130, 0, 65), point3(295, 165, 230), white));
+    // objects.add(make_shared<box>(point3(265, 0, 295), point3(430, 330, 460), white));
     // Objects
     let objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![
         Arc::new(PlaneX::new(555., 0., 0., 555., 555., green)),
@@ -332,10 +335,15 @@ pub fn cornell_box(settings: &mut GlobalSettings) -> Renderer {
         Arc::new(PlaneY::new(213., 554., 227., 130., 105., light)),
         Arc::new(PlaneY::new(0., 0., 0., 555., 555., white.clone())),
         Arc::new(PlaneY::new(0., 555., 0., 555., 555., white.clone())),
-        Arc::new(PlaneZ::new(0., 0., 555., 555., 555., white)),
+        Arc::new(PlaneZ::new(0., 0., 555., 555., 555., white.clone())),
+        Arc::new(Cube::new(
+            Vec3::new(130., 0., 65.),
+            Vec3::new(295., 165., 230.),
+            white,
+        )),
     ];
 
-    let world = WorldObjects::new(objects);
+    let world = HittableList::new(objects);
     // ---------
     Renderer::init(
         camera,

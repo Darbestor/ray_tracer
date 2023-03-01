@@ -7,7 +7,7 @@ use rust_ray_tracer::{
     raytracing::{
         camera::Camera,
         material::{MatDielectric, MatLabmertian, MatMetalic, Material},
-        objects::{HittableObject, Sphere, WorldObjects},
+        objects::{HittableList, HittableObject, Sphere},
         renderer::Renderer,
         texture::{SolidColorTexture, Texture},
     },
@@ -19,7 +19,7 @@ static HEIGHT: usize = (WIDTH as f32 / ASPECT_RATIO) as usize;
 static SAMPLES_PER_PIXEL: usize = 100;
 static MAX_RAY_BOUNCES: usize = 50;
 
-fn scene() -> WorldObjects {
+fn scene() -> HittableList {
     let mut objects: Vec<Arc<dyn HittableObject + Send + Sync>> = Vec::new();
 
     let ground_material = Arc::new(Material::Labmertian(MatLabmertian {
@@ -80,7 +80,7 @@ fn scene() -> WorldObjects {
         roughness: 0.0,
     }));
     objects.push(Arc::new(Sphere::new(Vec3::new(4., 1., 0.), 1.0, material)));
-    WorldObjects::new(objects)
+    HittableList::new(objects)
 }
 
 fn setup_render() -> Renderer {

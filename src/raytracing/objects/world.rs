@@ -9,19 +9,19 @@ use crate::raytracing::{
 use super::HittableObject;
 
 #[derive(Default)]
-pub struct WorldObjects {
+pub struct HittableList {
     pub objects: Vec<Arc<dyn HittableObject + Send + Sync>>,
 }
 
-impl WorldObjects {
+impl HittableList {
     pub fn new(objects: Vec<Arc<dyn HittableObject + Send + Sync>>) -> Self {
         Self { objects }
     }
 }
 
-impl HittableObject for WorldObjects {}
+impl HittableObject for HittableList {}
 
-impl RayHitTester for WorldObjects {
+impl RayHitTester for HittableList {
     fn hit(&self, ray: &Ray, min_distance: f32, max_distance: f32) -> Option<HitResult> {
         let mut closest = max_distance;
         let mut temp_hit_result = None;
@@ -36,7 +36,7 @@ impl RayHitTester for WorldObjects {
     }
 }
 
-impl BoundingBox for WorldObjects {
+impl BoundingBox for HittableList {
     fn bounding_box(&self, start_time: f32, end_time: f32) -> Result<AABB, BoundingBoxError> {
         if self.objects.is_empty() {
             return Err(BoundingBoxError);
