@@ -33,12 +33,13 @@ fn main() {
         "1" => example_scenes::test_scene(&settings),
         "2" => example_scenes::random_scene(&settings),
         "3" => example_scenes::earth_scene(&settings),
+        "4" => example_scenes::lighting_scene(&settings),
         _ => panic!("Unknown scene number"),
     };
 
     let scene = renderer.render(settings.width, settings.height, true);
 
-    save_to_ppm("image_texture.ppm", settings.width, settings.height, scene);
+    save_to_ppm("lighting.ppm", settings.width, settings.height, scene);
 }
 
 fn save_to_ppm(filename: &str, width: usize, height: usize, scene: Vec<Vec3>) {

@@ -3,12 +3,13 @@ use rayon::prelude::{IndexedParallelIterator, IntoParallelRefMutIterator, Parall
 
 use crate::{math::vec3::Vec3, utils::progress_watcher::ProgressObserver};
 
-use super::{camera::Camera, material::MaterialScatter, objects::HittableObject, ray::Ray};
+use super::{camera::Camera, objects::HittableObject, ray::Ray};
 
 pub struct Renderer {
     pub camera: Camera,
     pub samples_per_pixel: usize,
     pub max_ray_bounces: usize,
+    pub background: Vec3,
     pub objects: Box<dyn HittableObject + Send + Sync>,
 }
 
@@ -24,6 +25,7 @@ impl Renderer {
             samples_per_pixel,
             max_ray_bounces,
             objects,
+            background: Vec3::new(0., 0., 0.),
         }
     }
 
@@ -66,17 +68,20 @@ impl Renderer {
         }
 
         if let Some(hit) = self.objects.hit(ray, 0.001, f32::INFINITY) {
+            let emitted = hit.material.emitted(&hit.uv, &hit.location);
             if let Some(scatter_result) = hit.material.scatter(ray, &hit) {
-                return scatter_result.attenuation
-                    * self.render_pixel(&scatter_result.ray, depth - 1);
+                emitted
+                    + scatter_result.attenuation * self.render_pixel(&scatter_result.ray, depth - 1)
             } else {
-                return Vec3::zero();
+                emitted
             }
+        } else {
+            self.background
         }
 
-        let unit_direction = ray.direction.norm();
-        let t = 0.5 * (unit_direction.y() + 1.0);
-        // Blend between white and blue
-        (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
+        // let unit_direction = ray.direction.norm();
+        // let t = 0.5 * (unit_direction.y() + 1.0);
+        // // Blend between white and blue
+        // (1.0 - t) * Vec3::new(1., 1., 1.) + t * Vec3::new(0.5, 0.7, 1.0)
     }
 }

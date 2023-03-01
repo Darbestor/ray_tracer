@@ -8,13 +8,14 @@ use crate::math::{random_in_unit_sphere, vec3::Vec3};
 use super::{
     ray::Ray,
     ray_hit::HitResult,
-    texture::{Texture, TextureFunc},
+    texture::{Texture, TextureFunc, UvCoords},
 };
 
 pub enum Material {
     Labmertian(MatLabmertian),
     Metalic(MatMetalic),
     Dielectric(MatDielectric),
+    DiffuseLight(MatDiffuseLight),
 }
 
 pub struct MatLabmertian {
@@ -30,27 +31,37 @@ pub struct MatDielectric {
     pub refraction_index: f32,
 }
 
+pub struct MatDiffuseLight {
+    pub emit: Arc<Texture>,
+}
+
 pub struct ScatterResult {
     pub attenuation: Vec3,
     pub ray: Ray,
 }
 
-pub trait MaterialScatter {
-    fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult>;
-}
-
-impl MaterialScatter for Material {
-    fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+impl Material {
+    pub fn scatter(&self, ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         match self {
             Material::Labmertian(mat) => mat.scatter(ray, hit_result),
             Material::Metalic(mat) => mat.scatter(ray, hit_result),
             Material::Dielectric(mat) => mat.scatter(ray, hit_result),
+            Material::DiffuseLight(_) => None,
+        }
+    }
+
+    pub fn emitted(&self, uv_coords: &UvCoords, point: &Vec3) -> Vec3 {
+        const NO_EMIT_COLOR: Vec3 = Vec3::new(0., 0., 0.);
+
+        match self {
+            Material::DiffuseLight(mat) => mat.emitted(uv_coords, point),
+            _ => NO_EMIT_COLOR,
         }
     }
 }
 
-impl MaterialScatter for MatLabmertian {
-    fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+impl MatLabmertian {
+    pub fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let scatter_direction =
             hit_result.location + hit_result.normal + random_in_unit_sphere().norm();
         let scattered = Ray::new(
@@ -72,10 +83,8 @@ impl MatMetalic {
             roughness: roughness.clamp(-1., 1.),
         }
     }
-}
 
-impl MaterialScatter for MatMetalic {
-    fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+    pub fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let reflection = MaterialFunctions::reflect(&in_ray.direction, &hit_result.normal);
         let scattered = Ray::new(
             hit_result.location,
@@ -96,10 +105,8 @@ impl MaterialScatter for MatMetalic {
 
 impl MatDielectric {
     const ALBEDO: Vec3 = Vec3::new(1., 1., 1.);
-}
 
-impl MaterialScatter for MatDielectric {
-    fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
+    pub fn scatter(&self, in_ray: &Ray, hit_result: &HitResult) -> Option<ScatterResult> {
         let refraction_ratio = if hit_result.front_face {
             1.0 / self.refraction_index
         } else {
@@ -115,6 +122,12 @@ impl MaterialScatter for MatDielectric {
             attenuation: MatDielectric::ALBEDO,
             ray: Ray::new(hit_result.location, refracted, in_ray.time),
         })
+    }
+}
+
+impl MatDiffuseLight {
+    pub fn emitted(&self, uv_coords: &UvCoords, point: &Vec3) -> Vec3 {
+        self.emit.value(uv_coords, point)
     }
 }
 

@@ -5,7 +5,7 @@ use rust_ray_tracer::{
     math::vec3::Vec3,
     raytracing::{
         camera::Camera,
-        material::{MatDielectric, MatLabmertian, MatMetalic, Material},
+        material::{MatDielectric, MatDiffuseLight, MatLabmertian, MatMetalic, Material},
         objects::{HittableObject, MovingSphere, Sphere, WorldObjects},
         renderer::Renderer,
         texture::{CheckerTexture, ImageTexture, SolidColorTexture, Texture},
@@ -45,12 +45,14 @@ pub fn earth_scene(settings: &GlobalSettings) -> Renderer {
     let globe = Arc::new(Sphere::new(Vec3::new(0., 0., 0.), 2.0, earth_surface));
     let world = WorldObjects::new(vec![globe]);
 
-    Renderer::init(
+    let mut render = Renderer::init(
         camera,
         settings.samples_per_pixel,
         settings.max_ray_bounces,
         Box::new(world),
-    )
+    );
+    render.background = Vec3::new(0.70, 0.80, 1.00);
+    render
 }
 
 pub fn test_scene(settings: &GlobalSettings) -> Renderer {
@@ -103,12 +105,14 @@ pub fn test_scene(settings: &GlobalSettings) -> Renderer {
     ];
     let world = WorldObjects::new(objects);
     // ---------
-    Renderer::init(
+    let mut render = Renderer::init(
         camera,
         settings.samples_per_pixel,
         settings.max_ray_bounces,
         Box::new(world),
-    )
+    );
+    render.background = Vec3::new(0.70, 0.80, 1.00);
+    render
 }
 
 pub fn random_scene(settings: &GlobalSettings) -> Renderer {
@@ -208,10 +212,72 @@ pub fn random_scene(settings: &GlobalSettings) -> Renderer {
     let world = WorldObjects::new(objects);
     // ------------------------
 
-    Renderer::init(
+    let mut render = Renderer::init(
         camera,
         settings.samples_per_pixel,
         settings.max_ray_bounces,
         Box::new(world),
-    )
+    );
+
+    render.background = Vec3::new(0.70, 0.80, 1.00);
+    render
+}
+
+pub fn lighting_scene(settings: &GlobalSettings) -> Renderer {
+    // Camera
+    let lookfrom = Vec3::new(13., 2., 3.);
+    let lookat = Vec3::new(0., 0., 0.);
+    let rotation = Vec3::new(0., 1., 0.);
+    let vfov = 20.0;
+    let dist_to_focus = 10.;
+    let aperture = 0.1;
+
+    let camera = Camera::new(
+        lookfrom,
+        lookat,
+        rotation,
+        vfov,
+        settings.aspect_ratio,
+        aperture,
+        dist_to_focus,
+        settings.animation_start_time,
+        settings.animation_end_time,
+    );
+
+    // --------World---------
+    //Materials
+    let material_ground = Arc::new(Material::Labmertian(MatLabmertian {
+        albedo: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.8, 0.8, 0.0))),
+    }));
+    let material_center = Arc::new(Material::DiffuseLight(MatDiffuseLight {
+        emit: Arc::new(Texture::SolidColor(SolidColorTexture::new(0.7, 0.3, 0.3))),
+    }));
+    let material_left = Arc::new(Material::Dielectric(MatDielectric {
+        refraction_index: 1.7,
+    }));
+    let material_right = Arc::new(Material::Metalic(MatMetalic::new(
+        Vec3::new(0.8, 0.6, 0.2),
+        1.0,
+    )));
+
+    // Objects
+    let objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![
+        Arc::new(Sphere::new(Vec3::new(0., 0., -1.), 0.5, material_center)),
+        Arc::new(Sphere::new(
+            Vec3::new(0., -100.5, -1.),
+            100.,
+            material_ground,
+        )),
+        Arc::new(Sphere::new(Vec3::new(-1., 0., -1.), 0.5, material_left)),
+        Arc::new(Sphere::new(Vec3::new(1., 0., -1.), 0.5, material_right)),
+    ];
+    let world = WorldObjects::new(objects);
+    // ---------
+    let mut render = Renderer::init(
+        camera,
+        settings.samples_per_pixel,
+        settings.max_ray_bounces,
+        Box::new(world),
+    );
+    render
 }
