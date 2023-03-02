@@ -5,6 +5,7 @@ pub mod cube;
 pub mod moving_sphere;
 pub mod plane;
 pub mod sphere;
+pub mod translate;
 pub mod world;
 
 pub use bvh::BvhNode;
@@ -14,6 +15,7 @@ pub use plane::PlaneX;
 pub use plane::PlaneY;
 pub use plane::PlaneZ;
 pub use sphere::Sphere;
+pub use translate::Translate;
 pub use world::HittableList;
 
 pub trait HittableObject: RayHitTester + BoundingBox {}
