@@ -7,6 +7,7 @@ pub mod plane;
 pub mod sphere;
 pub mod translate;
 pub mod world;
+pub mod yaw_rotation;
 
 pub use bvh::BvhNode;
 pub use cube::Cube;

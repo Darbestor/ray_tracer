@@ -1,5 +1,3 @@
-use std::sync::Arc;
-
 use crate::{
     math::vec3::Vec3,
     raytracing::{
@@ -12,12 +10,12 @@ use crate::{
 use super::HittableObject;
 
 pub struct Translate {
-    instance: Arc<dyn HittableObject + Send + Sync>,
+    instance: Box<dyn HittableObject + Send + Sync>,
     offset: Vec3,
 }
 
 impl Translate {
-    pub fn new(instance: Arc<dyn HittableObject + Send + Sync>, displacement: Vec3) -> Self {
+    pub fn new(instance: Box<dyn HittableObject + Send + Sync>, displacement: Vec3) -> Self {
         Self {
             instance,
             offset: displacement,
@@ -48,6 +46,7 @@ impl RayHitTester for Translate {
                 if !front_face {
                     hit.normal = -hit.normal;
                 }
+                hit.front_face = front_face;
                 hit
             })
     }

@@ -7,7 +7,8 @@ use rust_ray_tracer::{
         camera::Camera,
         material::{MatDielectric, MatDiffuseLight, MatLabmertian, MatMetalic, Material},
         objects::{
-            Cube, HittableList, HittableObject, MovingSphere, PlaneX, PlaneY, PlaneZ, Sphere,
+            yaw_rotation::YawRotation, Cube, HittableList, HittableObject, MovingSphere, PlaneX,
+            PlaneY, PlaneZ, Sphere, Translate,
         },
         renderer::Renderer,
         texture::{CheckerTexture, ImageTexture, SolidColorTexture, Texture},
@@ -329,6 +330,13 @@ pub fn cornell_box(settings: &mut GlobalSettings) -> Renderer {
     // objects.add(make_shared<box>(point3(130, 0, 65), point3(295, 165, 230), white));
     // objects.add(make_shared<box>(point3(265, 0, 295), point3(430, 330, 460), white));
     // Objects
+    let cube1 = Box::new(Cube::new(
+        Vec3::new(130., 0., 65.),
+        Vec3::new(295., 165., 230.),
+        white.clone(),
+    ));
+    let cube1 = Box::new(Translate::new(cube1, Vec3::new(100., 200., 0.)));
+    let cube1 = Arc::new(YawRotation::new(cube1, 25.));
     let objects: Vec<Arc<dyn HittableObject + Send + Sync>> = vec![
         Arc::new(PlaneX::new(555., 0., 0., 555., 555., green)),
         Arc::new(PlaneX::new(0., 0., 0., 555., 555., red)),
@@ -336,11 +344,7 @@ pub fn cornell_box(settings: &mut GlobalSettings) -> Renderer {
         Arc::new(PlaneY::new(0., 0., 0., 555., 555., white.clone())),
         Arc::new(PlaneY::new(0., 555., 0., 555., 555., white.clone())),
         Arc::new(PlaneZ::new(0., 0., 555., 555., 555., white.clone())),
-        Arc::new(Cube::new(
-            Vec3::new(130., 0., 65.),
-            Vec3::new(295., 165., 230.),
-            white.clone(),
-        )),
+        cube1,
         Arc::new(Cube::new(
             Vec3::new(265., 0., 295.),
             Vec3::new(430., 330., 460.),
