@@ -339,6 +339,11 @@ pub fn cornell_box(settings: &mut GlobalSettings) -> Renderer {
         Arc::new(Cube::new(
             Vec3::new(130., 0., 65.),
             Vec3::new(295., 165., 230.),
+            white.clone(),
+        )),
+        Arc::new(Cube::new(
+            Vec3::new(265., 0., 295.),
+            Vec3::new(430., 330., 460.),
             white,
         )),
     ];
